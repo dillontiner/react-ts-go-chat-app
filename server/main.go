@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -80,7 +79,7 @@ func main() {
 		splitAuthHeader := strings.Split(authHeader, "Basic ")
 		encodedUsernamePassword := splitAuthHeader[1]
 		decodedUsernamePassword, err := base64.StdEncoding.DecodeString(encodedUsernamePassword)
-		fmt.Println(string(decodedUsernamePassword))
+
 		if err != nil {
 			// failed parsing auth
 			http.Error(w, http.StatusText(500), 500)

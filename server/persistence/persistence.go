@@ -44,10 +44,8 @@ func NewClient() (*Client, error) {
 
 func (c *Client) CreateUser(user entities.User) (*entities.User, error) {
 	// TODO: caller or this should set uuid
-	fmt.Println(user.UUID)
 
 	user.UUID = uuid.NewV4()
-	fmt.Println(user)
 	result := c.db.Create(&user)
 
 	if result.Error != nil {
