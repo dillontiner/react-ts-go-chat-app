@@ -1,6 +1,7 @@
 package dbClient
 
 import (
+	"chat-app-server/entities"
 	"fmt"
 
 	uuid "github.com/satori/go.uuid"
@@ -25,14 +26,7 @@ func NewClient() (*Client, error) {
 	return &client, nil
 }
 
-type User struct {
-	UUID     uuid.UUID
-	Name     string
-	Email    string
-	Password string
-}
-
-func (c *Client) CreateUser(user User) (*User, error) {
+func (c *Client) CreateUser(user entities.User) (*entities.User, error) {
 	fmt.Println(user.UUID)
 
 	user.UUID = uuid.NewV4()

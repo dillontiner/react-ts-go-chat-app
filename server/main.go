@@ -2,6 +2,7 @@ package main
 
 import (
 	"chat-app-server/dbClient"
+	"chat-app-server/entities"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,7 +21,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	user := dbClient.User{
+	user := entities.User{
 		Name:     "dillon",
 		Email:    "Dillon@gmail.com",
 		Password: "asdsadsa",
