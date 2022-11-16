@@ -1,7 +1,9 @@
 package persistence
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"server/entities"
 
 	uuid "github.com/satori/go.uuid"
@@ -14,11 +16,22 @@ type Client struct {
 }
 
 func NewClient() (*Client, error) {
-	// TODO: use env vars
-	// Deffered Improvement: handling different env configurations
-	// DB_PORT := "64174" // localhost
-	DB_PORT := "32076" // http://192.168.49.2:32076
-	dsn := fmt.Sprintf("host=192.168.49.2 user=postgres password=TfwePfOzum dbname=chat_app port=%v sslmode=disable", DB_PORT)
+	DB_HOST := os.Getenv("DB_HOST")
+	if DB_HOST == "" {
+		return nil, errors.New("missing DB_HOST env var")
+	}
+
+	DB_PORT := os.Getenv("DB_PORT")
+	if DB_PORT == "" {
+		return nil, errors.New("missing DB_HOST env var")
+	}
+
+	DB_PASSWORD := os.Getenv("DB_PASSWORD")
+	if DB_PASSWORD == "" {
+		return nil, errors.New("missing DB_HOST env var")
+	}
+
+	dsn := fmt.Sprintf("host=%v user=postgres password=%v dbname=chat_app port=%v sslmode=disable", DB_HOST, DB_PASSWORD, DB_PORT)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
@@ -30,6 +43,7 @@ func NewClient() (*Client, error) {
 }
 
 func (c *Client) CreateUser(user entities.User) (*entities.User, error) {
+	// TODO: caller or this should set uuid
 	fmt.Println(user.UUID)
 
 	user.UUID = uuid.NewV4()

@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/go-chi/chi/v5 v5.0.7
+	github.com/joho/godotenv v1.4.0
 	github.com/satori/go.uuid v1.2.0
 	gorm.io/driver/postgres v1.4.5
 	gorm.io/gorm v1.24.1
