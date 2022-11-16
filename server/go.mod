@@ -1,4 +1,4 @@
-module chat-app-server
+module server
 
 go 1.18
 

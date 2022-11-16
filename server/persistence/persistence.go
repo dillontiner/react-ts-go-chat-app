@@ -1,8 +1,8 @@
 package persistence
 
 import (
-	"chat-app-server/entities"
 	"fmt"
+	"server/entities"
 
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/driver/postgres"

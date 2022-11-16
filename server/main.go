@@ -1,12 +1,12 @@
 package main
 
 import (
-	"chat-app-server/entities"
-	"chat-app-server/persistence"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"server/entities"
+	"server/persistence"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -15,7 +15,7 @@ import (
 func main() {
 	// TODO Websocket Server on 4001 https://medium.com/rungo/running-multiple-http-servers-in-go-d15300f4e59f
 
-	logger := log.New(os.Stdout, "chat-app-server: ", log.LstdFlags)
+	logger := log.New(os.Stdout, "server: ", log.LstdFlags)
 
 	persistenceClient, err := persistence.NewClient()
 	if err != nil {
