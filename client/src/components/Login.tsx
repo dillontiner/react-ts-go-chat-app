@@ -48,7 +48,7 @@ const Login = () => {
         password: '',
     })
 
-    // TODO: useeffect where if auth is set, go to chat
+    // TODO: consider adding auth to cookies
 
     const handleInputChange = (e: any) => {
         const { id, value } = e.target;
