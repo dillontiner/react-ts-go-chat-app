@@ -38,8 +38,8 @@ type LoginValues = {
 
 const Login = () => {
     const [formValues, setFormValues] = useState<LoginValues>({
-        email: "",
-        password: "",
+        email: '',
+        password: '',
     })
 
     const handleInputChange = (e: any) => {
@@ -54,32 +54,32 @@ const Login = () => {
         event.preventDefault();
         console.log(formValues);
         // TODO: input validation
-        if (formValues.email != "" && formValues.password != "") {
-            console.log("should be good")
+        if (formValues.email != '' && formValues.password != '') {
+            console.log('should be good')
         }
     };
 
     return (
         <LoginWindow>
             <LoginTitleContainer>
-                <Typography variant="h4">Login</Typography>
+                <Typography variant='h4'>Login</Typography>
             </LoginTitleContainer>
             <StyledForm onSubmit={handleSubmit}>
                 <TextField
                     required
-                    id="email"
-                    label="email"
-                    variant="filled"
+                    id='email'
+                    label='email'
+                    variant='filled'
                     onChange={handleInputChange}
                 />
                 <TextField
                     required
-                    id="password"
-                    label="password"
-                    variant="filled"
+                    id='password'
+                    label='password'
+                    variant='filled'
                     onChange={handleInputChange}
                 />
-                <StyledLoginButton variant="contained" color="primary" type="submit">
+                <StyledLoginButton variant='contained' color='primary' type='submit'>
                     login
                 </StyledLoginButton>
             </StyledForm>
