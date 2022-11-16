@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -37,7 +38,38 @@ func main() {
 	// HTTP Server on 4000
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("welcome"))
+	})
+
+	r.Post("/login", func(w http.ResponseWriter, r *http.Request) {
+		// TODO: abstract decoding
+		dec := json.NewDecoder(r.Body)
+		dec.DisallowUnknownFields()
+
+		var createUserRequest entities.CreateUserRequest
+		err := dec.Decode(&createUserRequest)
+		if err != nil {
+			// TODO: handle error
+			panic(err)
+		}
+
+		user := entities.User{
+			Name:     createUserRequest.Name,
+			Email:    createUserRequest.Email,
+			Password: createUserRequest.Password,
+		}
+		_, err = persistenceClient.CreateUser(user)
+		if err != nil {
+			// TODO: handle err
+			panic(err)
+		}
+
+		// TODO: check if user exists
+		// TODO: create new user
+
+		// TODO: return 200
 		w.Write([]byte("welcome"))
 	})
 
