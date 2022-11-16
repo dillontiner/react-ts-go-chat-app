@@ -96,7 +96,7 @@ func main() {
 		username := usernamePassword[0]
 		password := usernamePassword[1]
 
-		userUUID, err := persistenceClient.GetUserAuthorization(username, password)
+		userUUID, err := persistenceClient.AuthorizeUser(username, password)
 		if err != nil {
 			if err.Error() == "unauthorized" {
 				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)

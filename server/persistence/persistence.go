@@ -67,7 +67,7 @@ func (c *Client) GetUserByEmail(email string) (*entities.User, error) {
 	return &user, nil
 }
 
-func (c *Client) GetUserAuthorization(email string, password string) (*uuid.UUID, error) {
+func (c *Client) AuthorizeUser(email string, password string) (*uuid.UUID, error) {
 	// TODO: caller or this should set uuid
 	user, err := c.GetUserByEmail(email)
 	if err != nil {
