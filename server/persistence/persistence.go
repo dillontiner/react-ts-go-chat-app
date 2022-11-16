@@ -48,6 +48,10 @@ func (c *Client) CreateUser(user entities.User) (*entities.User, error) {
 
 	user.UUID = uuid.NewV4()
 	result := c.db.Create(&user)
+	if result.Error != nil && result.Error.Error() == "ERROR: duplicate key value violates unique constraint \"users_email_key\" (SQLSTATE 23505)" { // hacky error handling
+		return nil, errors.New("user already exists") // TODO: redirect them to login
+	}
+
 	if result.Error != nil {
 		return nil, result.Error
 	}
