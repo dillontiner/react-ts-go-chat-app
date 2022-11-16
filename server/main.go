@@ -1,8 +1,8 @@
 package main
 
 import (
-	"chat-app-server/dbClient"
 	"chat-app-server/entities"
+	"chat-app-server/persistence"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,7 +17,7 @@ func main() {
 
 	logger := log.New(os.Stdout, "chat-app-server: ", log.LstdFlags)
 
-	db, err := dbClient.NewClient()
+	persistenceClient, err := persistence.NewClient()
 	if err != nil {
 		panic(err)
 	}
@@ -26,7 +26,7 @@ func main() {
 		Email:    "Dillon@gmail.com",
 		Password: "asdsadsa",
 	}
-	x, e := db.CreateUser(user)
+	x, e := persistenceClient.CreateUser(user)
 	fmt.Println(x, e)
 
 	// HTTP Server on 4000

@@ -1,4 +1,4 @@
-package dbClient
+package persistence
 
 import (
 	"chat-app-server/entities"
