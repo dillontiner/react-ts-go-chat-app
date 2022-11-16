@@ -1,8 +1,14 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
+import { BrowserRouter as Router } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  Navigate
+} from "react-router";
 
-function App() {
+const X = () => {
   return (
     <div className="App">
       <header className="App-header">
@@ -19,7 +25,26 @@ function App() {
           Learn React
         </a>
       </header>
-    </div>
+    </div >
+  )
+}
+
+const TODO = () => {
+  return (
+    <div>TODO</div>
+  )
+}
+
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/login" element={<X />} />
+        <Route path="/sign-up" element={<TODO />} />
+        <Route path="/chat" element={<TODO />} />
+        <Route path="*" element={<Navigate to="/login" />} />
+      </Routes>
+    </Router >
   );
 }
 
