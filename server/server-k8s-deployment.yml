@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: chat-app-server
+  name: chat-app-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chat-app-server
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: chat-app-server
+    spec:
+      containers:
+      - image: chat-app-server
+        name: chat-app-server
+        resources: {}
+        imagePullPolicy: Never
+status: {}

@@ -14,8 +14,11 @@ type Client struct {
 }
 
 func NewClient() (*Client, error) {
-	// TODO password to env var
-	dsn := "host=localhost user=postgres password=TfwePfOzum dbname=chat_app port=5432 sslmode=disable"
+	// TODO: use env vars
+	// Deffered Improvement: handling different env configurations
+	// DB_PORT := "64174" // localhost
+	DB_PORT := "32076" // http://192.168.49.2:32076
+	dsn := fmt.Sprintf("host=192.168.49.2 user=postgres password=TfwePfOzum dbname=chat_app port=%v sslmode=disable", DB_PORT)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
@@ -30,7 +33,7 @@ func (c *Client) CreateUser(user entities.User) (*entities.User, error) {
 	fmt.Println(user.UUID)
 
 	user.UUID = uuid.NewV4()
-	result := c.db.Create(&user) // pass pointer of data to Create
+	result := c.db.Create(&user)
 	if result.Error != nil {
 		return nil, result.Error
 	}

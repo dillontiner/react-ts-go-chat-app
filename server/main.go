@@ -23,8 +23,8 @@ func main() {
 	}
 	user := entities.User{
 		Name:     "dillon",
-		Email:    "Dillon@gmail.com",
-		Password: "asdsadsa",
+		Email:    "dillontiner@gmail.com",
+		Password: "dsfkjhkdsf",
 	}
 	x, e := persistenceClient.CreateUser(user)
 	fmt.Println(x, e)
