@@ -1,33 +1,21 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-import { BrowserRouter as Router } from "react-router-dom";
+import React, { useState } from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
 import {
   Routes,
   Route,
   Navigate
-} from "react-router";
+} from 'react-router';
+import { styled } from '@mui/system';
+import Login from './components/Login'
 
-const X = () => {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div >
-  )
-}
+const StyledApp = styled('div')({
+  background: 'black',
+  width: '100vw',
+  height: '100vh',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+})
 
 const TODO = () => {
   return (
@@ -37,14 +25,16 @@ const TODO = () => {
 
 const App = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<X />} />
-        <Route path="/sign-up" element={<TODO />} />
-        <Route path="/chat" element={<TODO />} />
-        <Route path="*" element={<Navigate to="/login" />} />
-      </Routes>
-    </Router >
+    <StyledApp>
+      <Router>
+        <Routes>
+          <Route path='/login' element={<Login />} />
+          <Route path='/sign-up' element={<TODO />} />
+          <Route path='/chat' element={<TODO />} />
+          <Route path='*' element={<Navigate to='/login' />} />
+        </Routes>
+      </Router >
+    </StyledApp>
   );
 }
 
