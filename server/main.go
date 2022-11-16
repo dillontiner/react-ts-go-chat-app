@@ -1,6 +1,8 @@
 package main
 
 import (
+	"chat-app-server/dbClient"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -13,6 +15,18 @@ func main() {
 	// TODO Websocket Server on 4001 https://medium.com/rungo/running-multiple-http-servers-in-go-d15300f4e59f
 
 	logger := log.New(os.Stdout, "chat-app-server: ", log.LstdFlags)
+
+	db, err := dbClient.NewClient()
+	if err != nil {
+		panic(err)
+	}
+	user := dbClient.User{
+		Name:     "dillon",
+		Email:    "Dillon@gmail.com",
+		Password: "asdsadsa",
+	}
+	x, e := db.CreateUser(user)
+	fmt.Println(x, e)
 
 	// HTTP Server on 4000
 	r := chi.NewRouter()
