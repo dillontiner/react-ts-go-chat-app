@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 )
 
@@ -29,15 +31,32 @@ func main() {
 		panic(err)
 	}
 
-	// HTTP Server on 4000
+	//
+	// HTTP Server and MiddleWare
+	//
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
+
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{"http://localhost:3000"}, // TODO: env var for this
+		AllowedMethods: []string{"GET", "POST"},
+		AllowedHeaders: []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		// ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
+
+	//
+	// HTTP Routes
+	//
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("welcome"))
 	})
 
 	r.Post("/login", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("received something")
+		logger.Println(r)
 		// TODO: abstract decoding
 		authHeader := r.Header.Get("Authorization")
 		splitAuthHeader := strings.Split(authHeader, "Basic ")
