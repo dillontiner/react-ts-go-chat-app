@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { styled } from '@mui/system';
 import { Paper, TextField, Typography, Button } from '@mui/material';
 import Axios from 'axios'
 import { useNavigate } from "react-router-dom"
+import AuthContext from './AuthContext'
 
 const LoginWindow = styled(Paper)({
     width: '20rem',
@@ -40,10 +41,14 @@ type LoginValues = {
 
 const Login = () => {
     const navigate = useNavigate()
+    const authContext = useContext(AuthContext)
+
     const [formValues, setFormValues] = useState<LoginValues>({
         email: '',
         password: '',
     })
+
+    // TODO: useeffect where if auth is set, go to chat
 
     const handleInputChange = (e: any) => {
         const { id, value } = e.target;
@@ -55,7 +60,7 @@ const Login = () => {
 
     const handleSubmit = (event: any) => {
         event.preventDefault();
-        console.log(formValues);
+
         // TODO: input validation
         if (formValues.email !== '' && formValues.password !== '') {
             const basicAuth = btoa(formValues.email + ":" + formValues.password) // TODO: hash password ?
@@ -67,8 +72,8 @@ const Login = () => {
                     "Authorization": "Basic " + basicAuth
                 }
             }).then(res => {
-                // TODO: set auth context and forward to /chat
-
+                // set auth context and go to the chat
+                authContext.setAuth(res.data.uuid)
                 navigate("/chat")
             }).catch((error) => {
                 // TODO: handle errors
