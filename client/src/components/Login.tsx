@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { styled } from '@mui/system';
 import { Paper, TextField, Typography, Button } from '@mui/material';
+import Axios from 'axios'
+import { useNavigate } from "react-router-dom"
 
 const LoginWindow = styled(Paper)({
     width: '20rem',
@@ -37,6 +39,7 @@ type LoginValues = {
 }
 
 const Login = () => {
+    const navigate = useNavigate()
     const [formValues, setFormValues] = useState<LoginValues>({
         email: '',
         password: '',
@@ -54,8 +57,23 @@ const Login = () => {
         event.preventDefault();
         console.log(formValues);
         // TODO: input validation
-        if (formValues.email != '' && formValues.password != '') {
-            console.log('should be good')
+        if (formValues.email !== '' && formValues.password !== '') {
+            const basicAuth = btoa(formValues.email + ":" + formValues.password) // TODO: hash password ?
+
+            Axios({
+                method: "POST",
+                url: "http://localhost:4000/login",
+                headers: {
+                    "Authorization": "Basic " + basicAuth
+                }
+            }).then(res => {
+                // TODO: set auth context and forward to /chat
+
+                navigate("/chat")
+            }).catch((error) => {
+                // TODO: handle errors
+                console.log(error)
+            })
         }
     };
 
