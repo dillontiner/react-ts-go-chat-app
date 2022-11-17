@@ -5,7 +5,6 @@ import { Paper, TextField, Button, Typography } from '@mui/material'
 import { styled } from '@mui/system'
 import { useNavigate } from 'react-router'
 import Axios from 'axios'
-import { io } from "socket.io-client";
 import AuthContext from './AuthContext'
 
 const ChatWindow = styled(Paper)({
@@ -32,8 +31,10 @@ const ChatHistoryContainer = styled('div')({
 type ChatHistoryProps = {
     ws: WebSocket | null
 }
+
 const ChatHistory = ({ ws }: ChatHistoryProps) => {
-    const [lastMessage, setLastMessage] = useState<any[]>([])
+    const [lastMessage, setLastMessage] = useState("")
+    const [lastMessageSentAt, setLastMessageSentAt] = useState(new Date())
     const [messages, setMessages] = useState<any[]>([])
 
     useEffect(() => {
@@ -41,13 +42,16 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
         if (ws != null) {
             ws.onmessage = function (evt: any) {
                 setLastMessage(evt.data)
+                setLastMessageSentAt(new Date())
             }
         }
     }, [ws])
 
     useEffect(() => {
-        setMessages([...messages, lastMessage])
-    }, [lastMessage])
+        if (lastMessage !== "") {
+            setMessages([...messages, lastMessage])
+        }
+    }, [lastMessageSentAt])
 
     return (
         <>
@@ -71,6 +75,7 @@ const MessageTextField = styled(TextField)({
 })
 const SendButton = styled(Button)({
     width: '2rem',
+    textTransform: 'none',
 })
 const MessagePromptContainer = styled('div')({
     width: '100%',
@@ -105,31 +110,39 @@ const MessagePrompt = ({ ws }: MessagePromptProps) => {
     const handleSubmit = (event: any) => {
         event.preventDefault()
 
-        const now = new Date()
+        // const now = new Date()
         if (ws != null) {
+            // TODO: handle writing on the backend
             ws.send(message)
-        }
-        Axios({
-            method: "POST",
-            url: "http://localhost:4000/message",
-            headers: {},
-            data: {
-                senderUuid: authContext.auth, // UUID to parametrize request
-                body: message,
-                sentAt: now.toISOString()
+
+            // clear form inputs
+            const form = document.getElementById("message-prompt") as HTMLFormElement
+            if (form != null) {
+                form.reset()
+                setDisabled(true)
             }
-        }).then(res => {
-            // TODO: update messages in app
-            console.log(res)
-        }).catch((error) => {
-            // TODO: handle errors
-            console.log(error)
-        })
+        }
+        // Axios({
+        //     method: "POST",
+        //     url: "http://localhost:4000/message",
+        //     headers: {},
+        //     data: {
+        //         senderUuid: authContext.auth, // UUID to parametrize request
+        //         body: message,
+        //         sentAt: now.toISOString()
+        //     }
+        // }).then(res => {
+        //     // TODO: update messages in app
+        //     console.log(res)
+        // }).catch((error) => {
+        //     // TODO: handle errors
+        //     console.log(error)
+        // })
     };
 
     return (
         <MessagePromptContainer>
-            <StyledForm onSubmit={handleSubmit}>
+            <StyledForm id='message-prompt' onSubmit={handleSubmit}>
                 <MessageTextField
                     multiline
                     maxRows={10}

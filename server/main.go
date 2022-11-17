@@ -166,7 +166,7 @@ func main() {
 		logger.Println("Websocket Server running on port 4001")
 		flag.Parse()
 		http.HandleFunc("/echo", websocketserver.Echo)
-		http.HandleFunc("/", websocketserver.Home)
+		// http.HandleFunc("/", websocketserver.Home)
 		log.Fatal(http.ListenAndServe(":4001", nil))
 	}()
 
