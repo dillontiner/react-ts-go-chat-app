@@ -8,8 +8,8 @@ import Axios from 'axios'
 import AuthContext from './AuthContext'
 
 const ChatWindow = styled(Paper)({
-    width: '30rem',
-    height: '30rem',
+    width: '80%',
+    height: '95%',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
@@ -21,7 +21,7 @@ const ChatWindow = styled(Paper)({
 
 const ChatHistoryContainer = styled('div')({
     width: '100%',
-    height: '20rem',
+    height: '100%',
     display: 'flex',
     justifyContent: 'bottom',
     alignItems: 'left',
@@ -61,7 +61,6 @@ const Message = ({ body, user, sentAt }: MessageProps) => {
 type ChatHistoryProps = {
     ws: WebSocket | null
 }
-
 
 const ChatHistory = ({ ws }: ChatHistoryProps) => {
     const [lastMessage, setLastMessage] = useState("")
@@ -112,6 +111,7 @@ const SendButton = styled(Button)({
 })
 const MessagePromptContainer = styled('div')({
     width: '100%',
+    maxHeight: '10rem',
     marginTop: '1rem',
 })
 
