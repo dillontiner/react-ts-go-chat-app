@@ -10,6 +10,7 @@ import { styled } from '@mui/system';
 import Login from './components/Login'
 import SignUp from './components/SignUp'
 import AuthContext from './components/AuthContext'
+import Chat from './components/Chat'
 
 const StyledApp = styled('div')({
   background: 'black',
@@ -25,25 +26,6 @@ const TODO = () => {
     <div>TODO</div>
   )
 }
-
-
-const Chat = () => {
-  const authContext = useContext(AuthContext)
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    // TODO: query backend, redirect to login if failure
-    if (authContext.auth === "") {
-      navigate("/login")
-    }
-  })
-
-  return (
-    <TODO />
-  )
-}
-
-
 
 const App = () => {
   const [auth, setAuth] = useState("")
