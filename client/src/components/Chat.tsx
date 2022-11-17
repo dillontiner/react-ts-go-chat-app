@@ -14,23 +14,54 @@ const ChatWindow = styled(Paper)({
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
-    margin: '0.5rem',
-    marginLeft: '2rem',
-    marginRight: '2rem',
+    padding: '0.5rem',
+    paddingLeft: '2rem',
+    paddingRight: '2rem',
 })
 
 const ChatHistoryContainer = styled('div')({
-    width: '30rem',
+    width: '100%',
     height: '20rem',
     display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'column',
+    justifyContent: 'bottom',
+    alignItems: 'left',
+    flexDirection: 'column-reverse',
+    overflowY: 'scroll',
 })
+
+const MessageContainer = styled('div')({
+    padding: '1rem',
+    borderBottom: '1px solid #CCCCCC',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'wrap',
+    wordBreak: 'break-all',
+})
+
+const StyledTimestamp = styled('div')({
+    fontSize: '0.6rem',
+})
+
+type MessageProps = {
+    body: string
+    user: string
+    sentAt: string
+}
+
+const Message = ({ body, user, sentAt }: MessageProps) => {
+    return (
+        <MessageContainer>
+            <div><b>{user}</b></div>
+            <div>{body}</div>
+            <StyledTimestamp>{sentAt}</StyledTimestamp>
+        </MessageContainer>
+    )
+}
 
 type ChatHistoryProps = {
     ws: WebSocket | null
 }
+
 
 const ChatHistory = ({ ws }: ChatHistoryProps) => {
     const [lastMessage, setLastMessage] = useState("")
@@ -49,16 +80,13 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
 
     useEffect(() => {
         if (lastMessage !== "") {
-            setMessages([...messages, lastMessage])
+            setMessages([lastMessage, ...messages])
         }
     }, [lastMessageSentAt])
 
     return (
         <>
-            <>CHAT HISTORY</>
-            <ul>
-                {messages.map((reptile) => <li>{reptile}</li>)}
-            </ul>
+            {messages.map((message) => <Message body={message} user={"TODO"} sentAt={"TODO"} />)}
         </>
     )
 }
