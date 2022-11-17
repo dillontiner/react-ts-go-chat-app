@@ -57,8 +57,8 @@ func (c *Client) CreateUser(user entities.User) (*entities.User, error) {
 
 func (c *Client) GetUserByEmail(email string) (*entities.User, error) {
 	// TODO: caller or this should set uuid
-	user := entities.User{Email: email}
-	result := c.db.First(&user)
+	user := entities.User{}
+	result := c.db.First(&user, "email = ?", email)
 
 	if result.Error != nil {
 		return nil, result.Error
