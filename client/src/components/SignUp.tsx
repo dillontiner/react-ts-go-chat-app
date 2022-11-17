@@ -63,7 +63,7 @@ const SignUp = () => {
         setFormValues(newFormValues)
 
         // TODO: better input validation
-        if (newFormValues.email !== '' && newFormValues.password !== '' && newFormValues.password === formValues.confirmPassword) {
+        if (newFormValues.email !== '' && newFormValues.password !== '' && newFormValues.password === newFormValues.confirmPassword) {
             setDisabled(false)
         } else {
             // TODO: handle delete case
