@@ -81,8 +81,9 @@ func (c *Client) AuthorizeUser(email string, password string) (*uuid.UUID, error
 func (c *Client) GetMessages() (*[]entities.Message, error) {
 	messages := []entities.Message{}
 
-	// TODO: pagination
-	result := c.db.Find(&messages, "LIMIT 100")
+	// TODO: paginated loading when user scrolls
+	// latest N messages
+	result := c.db.Order("sent_at desc").Limit(30).Find(&messages)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -92,8 +93,6 @@ func (c *Client) GetMessages() (*[]entities.Message, error) {
 
 func (c *Client) CreateMessage(message entities.Message) (*entities.Message, error) {
 	message.UUID = uuid.NewV4()
-	message.UpvoteUserUUIDS = []uuid.UUID{}
-	message.DownvoteUserUUIDS = []uuid.UUID{}
 
 	result := c.db.Create(&message)
 

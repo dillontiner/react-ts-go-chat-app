@@ -162,11 +162,25 @@ func main() {
 		logger.Println(createdMessage)
 	})
 
+	r.Get("/chat", func(w http.ResponseWriter, r *http.Request) {
+		messages, err := persistenceClient.GetMessages()
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		response := entities.GetChatResponse{
+			Messages: *messages,
+		}
+
+		json.NewEncoder(w).Encode(response)
+	})
+
 	go func() {
+		wsServer := websocketserver.NewServer(persistenceClient)
 		logger.Println("Websocket Server running on port 4001")
 		flag.Parse()
-		http.HandleFunc("/echo", websocketserver.Echo)
-		// http.HandleFunc("/", websocketserver.Home)
+		http.HandleFunc("/echo", wsServer.HandleLiveChat)
 		log.Fatal(http.ListenAndServe(":4001", nil))
 	}()
 

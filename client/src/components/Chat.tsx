@@ -62,30 +62,64 @@ type ChatHistoryProps = {
     ws: WebSocket | null
 }
 
+type Message = {
+    body: string,
+    sentAt: string,
+    senderUuid: string,
+    uuid?: string,
+    upvoteUserUuids?: string[],
+    downvoteUserUuids?: string[],
+}
+
 const ChatHistory = ({ ws }: ChatHistoryProps) => {
-    const [lastMessage, setLastMessage] = useState("")
+    const [lastMessage, setLastMessage] = useState<Message | null>(null)
     const [lastMessageSentAt, setLastMessageSentAt] = useState(new Date())
-    const [messages, setMessages] = useState<any[]>([])
+    const [chatHistory, setChatHistory] = useState<Message[]>([])
+    const [liveMessages, setLiveMessages] = useState<Message[]>([])
 
     useEffect(() => {
         // TODO: query backend, redirect to login if failure
         if (ws != null) {
             ws.onmessage = function (evt: any) {
-                setLastMessage(evt.data)
+                setLastMessage(JSON.parse(evt.data) as Message)
                 setLastMessageSentAt(new Date())
             }
         }
     }, [ws])
 
     useEffect(() => {
-        if (lastMessage !== "") {
-            setMessages([lastMessage, ...messages])
+        Axios({
+            method: "GET",
+            url: "http://localhost:4000/chat",
+        }).then(res => {
+            // TODO: update messages in history
+            setChatHistory(res?.data?.messages || [])
+        }).catch((error) => {
+            // TODO: handle errors
+            console.log(error)
+        })
+    }, [])
+
+    useEffect(() => {
+        console.log(lastMessage)
+        if (lastMessage !== null) {
+            setLiveMessages([lastMessage, ...liveMessages])
         }
     }, [lastMessageSentAt])
 
     return (
         <>
-            {messages.map((message) => <Message body={message} user={"TODO"} sentAt={"TODO"} />)}
+            {liveMessages.map((message) => {
+                console.log(message, message.body, message.senderUuid, message.sentAt)
+                return (
+                    <Message body={message.body} user={message.senderUuid} sentAt={message.sentAt} />
+                )
+            })}
+            {chatHistory.map((message) => {
+                return (
+                    <Message body={message.body} user={message.senderUuid} sentAt={message.sentAt} />
+                )
+            })}
         </>
     )
 }
@@ -120,12 +154,12 @@ type MessagePromptProps = {
 }
 const MessagePrompt = ({ ws }: MessagePromptProps) => {
     const [disabled, setDisabled] = useState(true)
-    const [message, setMessage] = useState('')
+    const [messageBody, setMessageBody] = useState('')
     const authContext = useContext(AuthContext)
 
     const handleInputChange = (e: any) => {
         const newMessage = e.target.value
-        setMessage(newMessage)
+        setMessageBody(newMessage)
 
         if (newMessage !== '') {
             setDisabled(false)
@@ -144,10 +178,16 @@ const MessagePrompt = ({ ws }: MessagePromptProps) => {
     const handleSubmit = (event: any) => {
         event.preventDefault()
 
-        // const now = new Date()
+        // TODO: fix dates getting truncated (missing times, wrong order)
+        const now = new Date()
         if (ws != null) {
             // TODO: handle writing on the backend
-            ws.send(message)
+            const message: Message = {
+                senderUuid: authContext.auth,
+                body: messageBody,
+                sentAt: now.toISOString()
+            }
+            ws.send(JSON.stringify(message))
 
             // clear form inputs
             const form = document.getElementById("message-prompt") as HTMLFormElement
@@ -180,7 +220,7 @@ const MessagePrompt = ({ ws }: MessagePromptProps) => {
                 <MessageTextField
                     multiline
                     maxRows={4}
-                    id='message'
+                    id='messageBody'
                     variant='filled'
                     InputLabelProps={{ shrink: false }}
                     sx={{
