@@ -62,10 +62,10 @@ func (c *Client) Read() {
 			log.Println(err)
 			return
 		}
-		message := Message{Type: messageType, Body: string(p)}
-		fmt.Println("Persisting message")
+
+		fmt.Println("Persisting chat message")
 		chatMessage := entities.Message{}
-		err = json.Unmarshal([]byte(message.Body), &chatMessage)
+		err = json.Unmarshal(p, &chatMessage)
 		if err != nil {
 			log.Print("WEBSOCKET SERVER: ERROR: failed to unmarshal message", err)
 		}
@@ -82,8 +82,9 @@ func (c *Client) Read() {
 			break
 		}
 
-		c.Pool.Broadcast <- Message{Type: message.Type, Body: string(createdMessageBytes)}
-		fmt.Printf("Message Received: %+v\n", message)
+		message := Message{Type: messageType, Body: string(createdMessageBytes)}
+		c.Pool.Broadcast <- message
+		log.Printf("Message Received: %+v\n", message)
 	}
 }
 
@@ -116,7 +117,7 @@ func (pool *Pool) Start() {
 			break
 		case message := <-pool.Broadcast:
 			fmt.Println("Sending message to all clients in Pool")
-			for client, _ := range pool.Clients {
+			for client := range pool.Clients {
 				if err := client.Conn.WriteJSON(message); err != nil {
 					fmt.Println(err)
 					return
