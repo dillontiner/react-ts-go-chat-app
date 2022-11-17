@@ -10,7 +10,15 @@ import (
 
 // var addr = flag.String("addr", "localhost:8080", "http service address")
 
-var upgrader = websocket.Upgrader{} // use default options
+func checkOrigin(r *http.Request) bool {
+	// origin := r.Header.Get("Origin")
+	// origin == "http://localhost:3000" || origin == "http://localhost:4001" // TODO: env var this
+	return true
+}
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: checkOrigin,
+} // use default options
 
 func Echo(w http.ResponseWriter, r *http.Request) {
 	log.SetFlags(0)
@@ -36,6 +44,7 @@ func Echo(w http.ResponseWriter, r *http.Request) {
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {
+	log.Println("ws://" + r.Host + "/echo")
 	homeTemplate.Execute(w, "ws://"+r.Host+"/echo")
 }
 
@@ -67,6 +76,8 @@ window.addEventListener("load", function(evt) {
         if (ws) {
             return false;
         }
+		console.log("hello")
+		console.log("{{.}}")
         ws = new WebSocket("{{.}}");
         ws.onopen = function(evt) {
             print("OPEN");

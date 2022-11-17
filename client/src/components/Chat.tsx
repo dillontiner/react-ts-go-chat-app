@@ -5,6 +5,7 @@ import { Paper, TextField, Button, Typography } from '@mui/material'
 import { styled } from '@mui/system'
 import { useNavigate } from 'react-router'
 import Axios from 'axios'
+import { io } from "socket.io-client";
 import AuthContext from './AuthContext'
 
 const ChatWindow = styled(Paper)({
@@ -19,7 +20,7 @@ const ChatWindow = styled(Paper)({
     marginRight: '2rem',
 })
 
-const ChatHistory = styled('div')({
+const ChatHistoryContainer = styled('div')({
     width: '30rem',
     height: '20rem',
     display: 'flex',
@@ -27,6 +28,36 @@ const ChatHistory = styled('div')({
     alignItems: 'center',
     flexDirection: 'column',
 })
+
+type ChatHistoryProps = {
+    ws: WebSocket | null
+}
+const ChatHistory = ({ ws }: ChatHistoryProps) => {
+    const [lastMessage, setLastMessage] = useState<any[]>([])
+    const [messages, setMessages] = useState<any[]>([])
+
+    useEffect(() => {
+        // TODO: query backend, redirect to login if failure
+        if (ws != null) {
+            ws.onmessage = function (evt: any) {
+                setLastMessage(evt.data)
+            }
+        }
+    }, [ws])
+
+    useEffect(() => {
+        setMessages([...messages, lastMessage])
+    }, [lastMessage])
+
+    return (
+        <>
+            <>CHAT HISTORY</>
+            <ul>
+                {messages.map((reptile) => <li>{reptile}</li>)}
+            </ul>
+        </>
+    )
+}
 
 const StyledForm = styled('form')({
     width: '100%',
@@ -45,12 +76,13 @@ const MessagePromptContainer = styled('div')({
     width: '100%',
 })
 
-const MessagePrompt = () => {
+type MessagePromptProps = {
+    ws: WebSocket | null
+}
+const MessagePrompt = ({ ws }: MessagePromptProps) => {
     const [disabled, setDisabled] = useState(true)
     const [message, setMessage] = useState('')
     const authContext = useContext(AuthContext)
-
-    // TODO: consider adding auth to cookies
 
     const handleInputChange = (e: any) => {
         const newMessage = e.target.value
@@ -63,10 +95,20 @@ const MessagePrompt = () => {
         }
     };
 
+    if (ws == null) {
+        // TODO: loading
+        return (
+            <>TODO: loading</>
+        )
+    }
+
     const handleSubmit = (event: any) => {
         event.preventDefault()
 
         const now = new Date()
+        if (ws != null) {
+            ws.send(message)
+        }
         Axios({
             method: "POST",
             url: "http://localhost:4000/message",
@@ -90,7 +132,6 @@ const MessagePrompt = () => {
             <StyledForm onSubmit={handleSubmit}>
                 <MessageTextField
                     multiline
-                    rows={2}
                     maxRows={10}
                     id='message'
                     variant='filled'
@@ -107,19 +148,38 @@ const MessagePrompt = () => {
 const Chat = () => {
     const authContext = useContext(AuthContext)
     const navigate = useNavigate()
+    const [ws, setWS] = useState<WebSocket | null>(null)
 
     useEffect(() => {
-        // TODO: query backend, redirect to login if failure
         if (authContext.auth === "") {
             navigate("/login")
         }
-    })
+
+        var newWS: WebSocket | null = new WebSocket("ws://127.0.0.1:4001/echo")
+
+        // Improvement: better handling of ws connection
+        newWS.onerror = function (evt) {
+            console.log("ERROR: " + evt);
+        }
+        newWS.onclose = function (evt) {
+            console.log("CLOSING");
+            newWS = null
+        }
+
+        setWS(newWS)
+    }, [])
+
+    if (authContext.auth === "") {
+        return <></> // redirecting
+    }
 
     return (
         <ChatWindow>
             <Typography variant="h4">Chit Chat</Typography>
-            <ChatHistory />
-            <MessagePrompt />
+            <ChatHistoryContainer>
+                <ChatHistory ws={ws} />
+            </ChatHistoryContainer>
+            <MessagePrompt ws={ws} />
         </ChatWindow>
     )
 }
