@@ -79,6 +79,7 @@ const SignUp = () => {
         // assumes input validation from handleInputChange
         const basicAuth = btoa(formValues.email + ":" + formValues.password) // TODO: hash password ?
 
+        // TODO: hash passwords bcryptjs
         Axios({
             method: "POST",
             url: "http://localhost:4000/login",

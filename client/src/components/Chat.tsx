@@ -4,6 +4,7 @@ import React, { useState, useEffect, useContext } from 'react'
 import { Paper, TextField, Button, Typography } from '@mui/material'
 import { styled } from '@mui/system'
 import { useNavigate } from 'react-router'
+import Axios from 'axios'
 import AuthContext from './AuthContext'
 
 const ChatWindow = styled(Paper)({
@@ -47,6 +48,7 @@ const MessagePromptContainer = styled('div')({
 const MessagePrompt = () => {
     const [disabled, setDisabled] = useState(true)
     const [message, setMessage] = useState('')
+    const authContext = useContext(AuthContext)
 
     // TODO: consider adding auth to cookies
 
@@ -62,24 +64,25 @@ const MessagePrompt = () => {
     };
 
     const handleSubmit = (event: any) => {
-        event.preventDefault();
+        event.preventDefault()
 
-        console.log(message)
-
-        // Axios({
-        //     method: "GET",
-        //     url: "http://localhost:4000/login",
-        //     headers: {
-        //         "Authorization": "Basic " + basicAuth
-        //     }
-        // }).then(res => {
-        //     // set auth context and go to the chat
-        //     authContext.setAuth(res.data.uuid)
-        //     navigate("/chat")
-        // }).catch((error) => {
-        //     // TODO: handle errors
-        //     console.log(error)
-        // })
+        const now = new Date()
+        console.log(now)
+        Axios({
+            method: "POST",
+            url: "http://localhost:4000/message",
+            data: {
+                senderUuid: authContext.auth, // UUID to parametrize request
+                message: message,
+                sentAt: now.toISOString()
+            }
+        }).then(res => {
+            // set auth context and go to the chat
+            console.log(res)
+        }).catch((error) => {
+            // TODO: handle errors
+            console.log(error)
+        })
     };
 
     return (
