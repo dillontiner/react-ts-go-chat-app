@@ -67,17 +67,17 @@ const MessagePrompt = () => {
         event.preventDefault()
 
         const now = new Date()
-        console.log(now)
         Axios({
             method: "POST",
             url: "http://localhost:4000/message",
+            headers: {},
             data: {
                 senderUuid: authContext.auth, // UUID to parametrize request
-                message: message,
+                body: message,
                 sentAt: now.toISOString()
             }
         }).then(res => {
-            // set auth context and go to the chat
+            // TODO: update messages in app
             console.log(res)
         }).catch((error) => {
             // TODO: handle errors

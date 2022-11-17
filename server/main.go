@@ -138,6 +138,19 @@ func main() {
 		json.NewEncoder(w).Encode(response)
 	})
 
+	r.Post("/message", func(w http.ResponseWriter, r *http.Request) {
+		message := entities.Message{}
+
+		err := json.NewDecoder(r.Body).Decode(&message)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		// TODO: save message, emit event over websocket
+		logger.Println(message)
+	})
+
 	logger.Println("HTTP Server running on port 4000")
 	http.ListenAndServe(":4000", r)
 }

@@ -80,3 +80,16 @@ func (c *Client) AuthorizeUser(email string, password string) (*uuid.UUID, error
 
 	return &user.UUID, nil
 }
+
+func (c *Client) GetMessages() (*[]entities.Message, error) {
+	// TODO: caller or this should set uuid
+	messages := []entities.Message{}
+
+	// TODO: pagination
+	result := c.db.Find(&messages, "LIMIT 100")
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &messages, nil
+}
