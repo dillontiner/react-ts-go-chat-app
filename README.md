@@ -5,7 +5,12 @@ Assumes the following are installed
 - Docker
 - minikube
 
-First, build and start the db:
+First, start Docker and start minikube in the command line:
+```
+minikube start
+```
+
+Next, build and start the db:
 ```
 make k8s-db-rebuild && make k8s-db-run
 ```
