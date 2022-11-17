@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -57,8 +56,6 @@ func main() {
 	// })
 
 	r.Post("/login", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("received something")
-		logger.Println(r)
 		// TODO: abstract decoding
 		authHeader := r.Header.Get("Authorization")
 		splitAuthHeader := strings.Split(authHeader, "Basic ")
@@ -138,28 +135,6 @@ func main() {
 		}
 
 		json.NewEncoder(w).Encode(response)
-	})
-
-	r.Post("/message", func(w http.ResponseWriter, r *http.Request) {
-		message := entities.Message{}
-
-		err := json.NewDecoder(r.Body).Decode(&message)
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-			return
-		}
-
-		// save message
-		createdMessage, err := persistenceClient.CreateMessage(message)
-		if err != nil {
-			logger.Println(err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-
-		// TODO: emit event over websocket
-
-		logger.Println(createdMessage)
 	})
 
 	r.Get("/chat", func(w http.ResponseWriter, r *http.Request) {

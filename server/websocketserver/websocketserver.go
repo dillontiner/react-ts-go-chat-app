@@ -42,7 +42,7 @@ func (s *Server) HandleLiveChat(w http.ResponseWriter, r *http.Request) {
 	for {
 		mt, message, err := c.ReadMessage()
 		if err != nil {
-			log.Println("WEBSOCKET SERVER: read:", err)
+			log.Print("WEBSOCKET SERVER: read:", err)
 			break
 		}
 
@@ -66,7 +66,7 @@ func (s *Server) HandleLiveChat(w http.ResponseWriter, r *http.Request) {
 
 		err = c.WriteMessage(mt, createdMessageBytes)
 		if err != nil {
-			log.Println("WEBSOCKET SERVER: ERROR: failed to write message", err)
+			log.Print("WEBSOCKET SERVER: ERROR: failed to write message", err)
 			break
 		}
 	}
