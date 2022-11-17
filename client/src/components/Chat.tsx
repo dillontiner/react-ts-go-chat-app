@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useContext } from 'react'
 import { Paper, TextField, Button, Typography } from '@mui/material'
+import ForwardIcon from '@mui/icons-material/Forward'
+import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined'
 import { styled } from '@mui/system'
 import { useNavigate } from 'react-router'
 import Axios from 'axios'
@@ -40,6 +42,34 @@ const MessageContainer = styled('div')({
 
 const StyledTimestamp = styled('div')({
     fontSize: '0.6rem',
+    marginTop: '0.5rem',
+})
+
+const DownVoted = styled(ForwardIcon)({
+    transform: 'rotate(90deg)',
+    color: 'red',
+})
+
+const UpVoted = styled(ForwardIcon)({
+    transform: 'rotate(-90deg)',
+    color: 'green',
+})
+
+const DownVoteEmpty = styled(ForwardOutlinedIcon)({
+    transform: 'rotate(90deg)',
+    color: 'blue',
+})
+
+const UpVoteEmpty = styled(ForwardOutlinedIcon)({
+    transform: 'rotate(-90deg)',
+    color: 'blue',
+})
+
+const NameVoteContainer = styled('div')({
+    fontWeight: 'bold',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
 })
 
 type MessageProps = {
@@ -48,11 +78,62 @@ type MessageProps = {
     sentAt: string
 }
 
+type VoteProps = {
+    votes: string[]
+}
+
+const VoteArrowContainer = styled('div')({
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+})
+
+
+const UpVote = ({ votes }: VoteProps) => {
+    const n = votes.length
+    const authContext = useContext(AuthContext)
+    const userVoted = votes.includes(authContext.auth)
+    return (
+        <VoteArrowContainer>
+            {userVoted ? (
+                <UpVoted onClick={() => { console.log('TODO') }} />
+            ) : (
+                <UpVoteEmpty onClick={() => { console.log('TODO') }} />
+            )}
+            <>{n}</>
+        </VoteArrowContainer>
+    )
+}
+
+const DownVote = ({ votes }: VoteProps) => {
+    const n = votes.length
+    const authContext = useContext(AuthContext)
+    const userVoted = votes.includes(authContext.auth)
+    return (
+        <VoteArrowContainer>
+            {userVoted ? (
+                <DownVoted onClick={() => { console.log('TODO') }} />
+            ) : (
+                <DownVoteEmpty onClick={() => { console.log('TODO') }} />
+            )}
+            <>{n}</>
+        </VoteArrowContainer>
+    )
+}
+
 const Message = ({ body, user, sentAt }: MessageProps) => {
+    // TODO: user upvoted or downvoted
     return (
         <MessageContainer>
-            <div><b>{user}</b></div>
-            <div>{body}</div>
+            <NameVoteContainer>
+                {user}
+                <NameVoteContainer>
+                    <UpVote votes={["a", user]} />
+                    <DownVote votes={["a", "b"]} />
+                </NameVoteContainer>
+            </NameVoteContainer>
+            {body}
             <StyledTimestamp>{sentAt}</StyledTimestamp>
         </MessageContainer>
     )
@@ -110,17 +191,8 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
 
     return (
         <>
-            {liveMessages.map((message) => {
-                console.log(message, message.body, message.senderUuid, message.sentAt)
-                return (
-                    <Message body={message.body} user={message.senderUuid} sentAt={message.sentAt} />
-                )
-            })}
-            {chatHistory.map((message) => {
-                return (
-                    <Message body={message.body} user={message.senderUuid} sentAt={message.sentAt} />
-                )
-            })}
+            {liveMessages.map((message) => (<Message body={message.body} user={message.senderUuid} sentAt={message.sentAt} />))}
+            {chatHistory.map((message) => (<Message body={message.body} user={message.senderUuid} sentAt={message.sentAt} />))}
         </>
     )
 }
