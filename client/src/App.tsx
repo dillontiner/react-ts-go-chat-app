@@ -8,6 +8,7 @@ import {
 } from 'react-router';
 import { styled } from '@mui/system';
 import Login from './components/Login'
+import SignUp from './components/SignUp'
 import AuthContext from './components/AuthContext'
 
 const StyledApp = styled('div')({
@@ -53,7 +54,7 @@ const App = () => {
         <Router>
           <Routes>
             <Route path='/login' element={<Login />} />
-            <Route path='/sign-up' element={<TODO />} />
+            <Route path='/sign-up' element={<SignUp />} />
             <Route path='/chat' element={<Chat />} />
             <Route path='*' element={<Navigate to='/login' />} />
           </Routes>

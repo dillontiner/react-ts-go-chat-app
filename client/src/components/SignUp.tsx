@@ -1,11 +1,11 @@
 import React, { useState, useContext } from 'react';
 import { styled } from '@mui/system';
-import { Paper, TextField, Typography, Button, Link } from '@mui/material';
+import { Paper, TextField, Typography, Button } from '@mui/material';
 import Axios from 'axios'
 import { useNavigate } from "react-router-dom"
 import AuthContext from './AuthContext'
 
-const LoginWindow = styled(Paper)({
+const SignUpWindow = styled(Paper)({
     width: '20rem',
     height: '30rem',
     display: 'flex',
@@ -14,12 +14,12 @@ const LoginWindow = styled(Paper)({
     flexDirection: 'column',
 })
 
-const LoginTitleContainer = styled('div')({
+const SignUpTitleContainer = styled('div')({
     paddingTop: '4rem',
     paddingBottom: '1rem',
 })
 
-const StyledLoginButton = styled(Button)({
+const StyledSignUpButton = styled(Button)({
     width: '10rem',
     textTransform: 'none',
 })
@@ -35,25 +35,21 @@ const StyledForm = styled('form')({
     paddingBottom: '2rem',
 })
 
-const SignUpLinkContainer = styled('div')({
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-})
-
-type LoginValues = {
+type SignUpValues = {
     email: string
     password: string
+    confirmPassword: string
 }
 
-const Login = () => {
+const SignUp = () => {
     const navigate = useNavigate()
     const authContext = useContext(AuthContext)
 
     const [disabled, setDisabled] = useState(true)
-    const [formValues, setFormValues] = useState<LoginValues>({
+    const [formValues, setFormValues] = useState<SignUpValues>({
         email: '',
         password: '',
+        confirmPassword: '',
     })
 
     // TODO: consider adding auth to cookies
@@ -67,22 +63,24 @@ const Login = () => {
         setFormValues(newFormValues)
 
         // TODO: better input validation
-        if (newFormValues.email !== '' && newFormValues.password !== '') {
+        if (newFormValues.email !== '' && newFormValues.password !== '' && newFormValues.password === formValues.confirmPassword) {
             setDisabled(false)
         } else {
             // TODO: handle delete case
             setDisabled(true)
         }
-    };
+    }
 
     const handleSubmit = (event: any) => {
         event.preventDefault();
+
+        // TODO: input validation
 
         // assumes input validation from handleInputChange
         const basicAuth = btoa(formValues.email + ":" + formValues.password) // TODO: hash password ?
 
         Axios({
-            method: "GET",
+            method: "POST",
             url: "http://localhost:4000/login",
             headers: {
                 "Authorization": "Basic " + basicAuth
@@ -98,10 +96,10 @@ const Login = () => {
     };
 
     return (
-        <LoginWindow>
-            <LoginTitleContainer>
-                <Typography variant='h4'>Login</Typography>
-            </LoginTitleContainer>
+        <SignUpWindow>
+            <SignUpTitleContainer>
+                <Typography variant='h4'>Sign Up</Typography>
+            </SignUpTitleContainer>
             <StyledForm onSubmit={handleSubmit}>
                 <TextField
                     required
@@ -117,16 +115,19 @@ const Login = () => {
                     variant='filled'
                     onChange={handleInputChange}
                 />
-                <StyledLoginButton disabled={disabled} variant='contained' color='primary' type='submit'>
-                    login
-                </StyledLoginButton>
-                <SignUpLinkContainer>
-                    <Typography variant="body2">Don't have an account?</Typography>
-                    <Typography variant="body2"><Link onClick={() => { navigate("/sign-up") }}>Sign Up</Link></Typography>
-                </SignUpLinkContainer>
+                <TextField
+                    required
+                    id='confirmPassword'
+                    label='confirm password'
+                    variant='filled'
+                    onChange={handleInputChange}
+                />
+                <StyledSignUpButton disabled={disabled} variant='contained' color='primary' type='submit'>
+                    sign up
+                </StyledSignUpButton>
             </StyledForm>
-        </LoginWindow>
+        </SignUpWindow>
     )
 }
 
-export default Login;
+export default SignUp;
