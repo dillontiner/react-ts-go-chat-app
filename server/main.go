@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
-	"flag"
 	"log"
 	"net/http"
 	"os"
@@ -152,11 +151,10 @@ func main() {
 	})
 
 	go func() {
-		wsServer := websocketserver.NewServer(persistenceClient)
 		logger.Println("Websocket Server running on port 4001")
-		flag.Parse()
-		http.HandleFunc("/echo", wsServer.HandleLiveChat)
-		log.Fatal(http.ListenAndServe(":4001", nil))
+		wsServer := websocketserver.NewServer(persistenceClient)
+		wsServer.SetupRoutes("/chat")
+		http.ListenAndServe(":4001", nil)
 	}()
 
 	logger.Println("HTTP Server running on port 4000")

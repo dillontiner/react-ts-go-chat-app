@@ -81,7 +81,8 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
         // TODO: query backend, redirect to login if failure
         if (ws != null) {
             ws.onmessage = function (evt: any) {
-                setLastMessage(JSON.parse(evt.data) as Message)
+                const wsMessageBody = JSON.parse(evt.data)?.body || {} // TODO: error handling
+                setLastMessage(JSON.parse(wsMessageBody) as Message)
                 setLastMessageSentAt(new Date())
             }
         }
@@ -247,7 +248,7 @@ const Chat = () => {
             navigate("/login")
         }
 
-        var newWS: WebSocket | null = new WebSocket("ws://127.0.0.1:4001/echo")
+        var newWS: WebSocket | null = new WebSocket("ws://127.0.0.1:4001/chat")
 
         // Improvement: better handling of ws connection
         newWS.onerror = function (evt) {

@@ -2,6 +2,7 @@ package websocketserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"server/entities"
@@ -12,47 +13,64 @@ import (
 
 // var addr = flag.String("addr", "localhost:8080", "http service address")
 type Server struct {
-	api *persistence.Client
+	API *persistence.Client
 }
 
 func NewServer(api *persistence.Client) Server {
 	return Server{
-		api: api,
+		API: api,
 	}
-}
-
-func checkOrigin(r *http.Request) bool {
-	// origin := r.Header.Get("Origin")
-	// origin == "http://localhost:3000" || origin == "http://localhost:4001" // TODO: env var this
-	return true
 }
 
 var upgrader = websocket.Upgrader{
-	CheckOrigin: checkOrigin,
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-func (s *Server) HandleLiveChat(w http.ResponseWriter, r *http.Request) {
-	log.SetFlags(0)
-	c, err := upgrader.Upgrade(w, r, nil)
+func Upgrade(w http.ResponseWriter, r *http.Request) (*websocket.Conn, error) {
+	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Print("WEBSOCKET SERVER: upgrade:", err)
-		return
+		log.Println(err)
+		return nil, err
 	}
-	defer c.Close()
-	for {
-		mt, message, err := c.ReadMessage()
-		if err != nil {
-			log.Print("WEBSOCKET SERVER: read:", err)
-			break
-		}
 
+	return conn, nil
+}
+
+type Message struct {
+	Type int    `json:"type"`
+	Body string `json:"body"`
+}
+
+type Client struct {
+	ID   string
+	Conn *websocket.Conn
+	Pool *Pool
+	API  *persistence.Client
+}
+
+func (c *Client) Read() {
+	defer func() {
+		c.Pool.Unregister <- c
+		c.Conn.Close()
+	}()
+
+	for {
+		messageType, p, err := c.Conn.ReadMessage()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		message := Message{Type: messageType, Body: string(p)}
+		fmt.Println("Persisting message")
 		chatMessage := entities.Message{}
-		err = json.Unmarshal(message, &chatMessage)
+		err = json.Unmarshal([]byte(message.Body), &chatMessage)
 		if err != nil {
 			log.Print("WEBSOCKET SERVER: ERROR: failed to unmarshal message", err)
 		}
 
-		createdMessage, err := s.api.CreateMessage(chatMessage)
+		createdMessage, err := c.API.CreateMessage(chatMessage)
 		if err != nil {
 			log.Print("WEBSOCKET SERVER: ERROR: failed to persist message", err)
 			break
@@ -64,10 +82,72 @@ func (s *Server) HandleLiveChat(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		err = c.WriteMessage(mt, createdMessageBytes)
-		if err != nil {
-			log.Print("WEBSOCKET SERVER: ERROR: failed to write message", err)
+		c.Pool.Broadcast <- Message{Type: message.Type, Body: string(createdMessageBytes)}
+		fmt.Printf("Message Received: %+v\n", message)
+	}
+}
+
+type Pool struct {
+	Register   chan *Client
+	Unregister chan *Client
+	Clients    map[*Client]bool
+	Broadcast  chan Message
+}
+
+func NewPool() *Pool {
+	return &Pool{
+		Register:   make(chan *Client),
+		Unregister: make(chan *Client),
+		Clients:    make(map[*Client]bool),
+		Broadcast:  make(chan Message),
+	}
+}
+
+func (pool *Pool) Start() {
+	for {
+		select {
+		case client := <-pool.Register:
+			pool.Clients[client] = true
+			fmt.Println("Size of Connection Pool: ", len(pool.Clients))
 			break
+		case client := <-pool.Unregister:
+			delete(pool.Clients, client)
+			fmt.Println("Size of Connection Pool: ", len(pool.Clients))
+			break
+		case message := <-pool.Broadcast:
+			fmt.Println("Sending message to all clients in Pool")
+			for client, _ := range pool.Clients {
+				if err := client.Conn.WriteJSON(message); err != nil {
+					fmt.Println(err)
+					return
+				}
+			}
 		}
 	}
+}
+
+func (s *Server) ServeWs(pool *Pool, w http.ResponseWriter, r *http.Request) {
+	fmt.Println("WebSocket Endpoint Hit")
+	conn, err := Upgrade(w, r)
+	if err != nil {
+		fmt.Fprintf(w, "%+v\n", err)
+	}
+
+	client := &Client{
+		Conn: conn,
+		Pool: pool,
+		API:  s.API,
+	}
+
+	pool.Register <- client
+	client.Read()
+}
+
+func (s *Server) SetupRoutes(path string) {
+	pool := NewPool()
+	go pool.Start()
+
+	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		s.ServeWs(pool, w, r)
+	})
 }
