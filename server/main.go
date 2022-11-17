@@ -3,12 +3,14 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"server/entities"
 	"server/persistence"
+	"server/websocketserver"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -50,9 +52,9 @@ func main() {
 	// HTTP Routes
 	//
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("welcome"))
-	})
+	// r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	// 	w.Write([]byte("welcome"))
+	// })
 
 	r.Post("/login", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("received something")
@@ -147,8 +149,7 @@ func main() {
 			return
 		}
 
-		// TODO: save message, emit event over websocket
-		logger.Println(message)
+		// save message
 		createdMessage, err := persistenceClient.CreateMessage(message)
 		if err != nil {
 			logger.Println(err)
@@ -156,8 +157,18 @@ func main() {
 			return
 		}
 
+		// TODO: emit event over websocket
+
 		logger.Println(createdMessage)
 	})
+
+	go func() {
+		logger.Println("Websocket Server running on port 4001")
+		flag.Parse()
+		http.HandleFunc("/echo", websocketserver.Echo)
+		http.HandleFunc("/", websocketserver.Home)
+		log.Fatal(http.ListenAndServe(":4001", nil))
+	}()
 
 	logger.Println("HTTP Server running on port 4000")
 	http.ListenAndServe(":4000", r)
