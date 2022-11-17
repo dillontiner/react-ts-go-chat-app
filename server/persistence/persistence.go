@@ -7,6 +7,7 @@ import (
 	"server/entities"
 
 	uuid "github.com/satori/go.uuid"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -45,6 +46,13 @@ func NewClient() (*Client, error) {
 func (c *Client) CreateUser(user entities.User) (*entities.User, error) {
 
 	user.UUID = uuid.NewV4()
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		panic(err)
+	}
+
+	user.Password = string(hashedPassword)
 	result := c.db.Create(&user)
 
 	if result.Error != nil {
@@ -71,7 +79,8 @@ func (c *Client) AuthorizeUser(email string, password string) (*uuid.UUID, error
 		return nil, err
 	}
 
-	if user.Password != password {
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
 		return nil, errors.New("unauthorized")
 	}
 
