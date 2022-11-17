@@ -93,20 +93,26 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
 
 const StyledForm = styled('form')({
     width: '100%',
+    height: '100%',
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-evenly',
+    flexDirection: 'column',
 })
 
 const MessageTextField = styled(TextField)({
-    width: '100',
+    width: '100%',
+    height: '100%',
 })
 const SendButton = styled(Button)({
-    width: '2rem',
+    width: '5rem',
+    height: '2rem',
     textTransform: 'none',
+    borderTopLeftRadius: '0px',
+    borderTopRightRadius: '0px',
+    alignSelf: 'flex-end',
 })
 const MessagePromptContainer = styled('div')({
     width: '100%',
+    marginTop: '1rem',
 })
 
 type MessagePromptProps = {
@@ -173,9 +179,14 @@ const MessagePrompt = ({ ws }: MessagePromptProps) => {
             <StyledForm id='message-prompt' onSubmit={handleSubmit}>
                 <MessageTextField
                     multiline
-                    maxRows={10}
+                    maxRows={4}
                     id='message'
                     variant='filled'
+                    InputLabelProps={{ shrink: false }}
+                    sx={{
+                        borderTopRightRadius: '0px!important',
+                        borderBottomRightRadius: '0px!important',
+                    }}
                     onChange={handleInputChange}
                 />
                 <SendButton disabled={disabled} variant='contained' color='primary' type='submit'>
