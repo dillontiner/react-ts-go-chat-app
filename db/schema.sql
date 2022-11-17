@@ -6,7 +6,7 @@ CREATE TABLE users(
 
 CREATE TABLE messages(
 	uuid VARCHAR(36) PRIMARY KEY,
-	sent_at DATE,
+	sent_at TIMESTAMP,
 	sender_uuid VARCHAR(36) REFERENCES users(uuid),
 	body text,
 	upvote_user_uuids VARCHAR(36)[],
@@ -16,6 +16,6 @@ CREATE TABLE messages(
 CREATE TABLE sessions(
 	uuid VARCHAR(36) PRIMARY KEY, 
 	user_uuid VARCHAR(36) REFERENCES users(uuid), 
-	created_at DATE, 
-	ends_at DATE
+	created_at TIMESTAMP, 
+	ends_at TIMESTAMP
 );
