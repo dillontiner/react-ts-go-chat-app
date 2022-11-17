@@ -65,14 +65,14 @@ func main() {
 
 		if err != nil {
 			// failed parsing auth
-			http.Error(w, http.StatusText(500), 500)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
 		emailPassword := strings.SplitN(string(decodedEmailPassword), ":", 2)
 		if len(emailPassword) != 2 {
 			// failed parsing auth
-			http.Error(w, http.StatusText(500), 500)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
@@ -86,7 +86,7 @@ func main() {
 				http.Error(w, http.StatusText(400), 400) // TODO: pass this to FE in interpretable way
 				return
 			}
-			http.Error(w, http.StatusText(500), 500)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
@@ -106,14 +106,14 @@ func main() {
 
 		if err != nil {
 			// failed parsing auth
-			http.Error(w, http.StatusText(500), 500)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
 		emailPassword := strings.SplitN(string(decodedEmailPassword), ":", 2)
 		if len(emailPassword) != 2 {
 			// failed parsing auth
-			http.Error(w, http.StatusText(500), 500)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
@@ -125,7 +125,7 @@ func main() {
 			if err.Error() == "unauthorized" {
 				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			} else {
-				http.Error(w, http.StatusText(500), 500)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
 
 			return
@@ -149,6 +149,14 @@ func main() {
 
 		// TODO: save message, emit event over websocket
 		logger.Println(message)
+		createdMessage, err := persistenceClient.CreateMessage(message)
+		if err != nil {
+			logger.Println(err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		logger.Println(createdMessage)
 	})
 
 	logger.Println("HTTP Server running on port 4000")

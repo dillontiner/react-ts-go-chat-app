@@ -43,7 +43,6 @@ func NewClient() (*Client, error) {
 }
 
 func (c *Client) CreateUser(user entities.User) (*entities.User, error) {
-	// TODO: caller or this should set uuid
 
 	user.UUID = uuid.NewV4()
 	result := c.db.Create(&user)
@@ -56,7 +55,6 @@ func (c *Client) CreateUser(user entities.User) (*entities.User, error) {
 }
 
 func (c *Client) GetUserByEmail(email string) (*entities.User, error) {
-	// TODO: caller or this should set uuid
 	user := entities.User{}
 	result := c.db.First(&user, "email = ?", email)
 
@@ -68,7 +66,6 @@ func (c *Client) GetUserByEmail(email string) (*entities.User, error) {
 }
 
 func (c *Client) AuthorizeUser(email string, password string) (*uuid.UUID, error) {
-	// TODO: caller or this should set uuid
 	user, err := c.GetUserByEmail(email)
 	if err != nil {
 		return nil, err
@@ -82,7 +79,6 @@ func (c *Client) AuthorizeUser(email string, password string) (*uuid.UUID, error
 }
 
 func (c *Client) GetMessages() (*[]entities.Message, error) {
-	// TODO: caller or this should set uuid
 	messages := []entities.Message{}
 
 	// TODO: pagination
@@ -92,4 +88,18 @@ func (c *Client) GetMessages() (*[]entities.Message, error) {
 	}
 
 	return &messages, nil
+}
+
+func (c *Client) CreateMessage(message entities.Message) (*entities.Message, error) {
+	message.UUID = uuid.NewV4()
+	message.UpvoteUserUUIDS = []uuid.UUID{}
+	message.DownvoteUserUUIDS = []uuid.UUID{}
+
+	result := c.db.Create(&message)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &message, nil
 }
