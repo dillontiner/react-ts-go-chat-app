@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"server/api"
 	"server/entities"
-	"server/persistence"
 
 	"github.com/gorilla/websocket"
 	uuid "github.com/satori/go.uuid"
@@ -14,11 +14,11 @@ import (
 
 // var addr = flag.String("addr", "localhost:8080", "http service address")
 type Server struct {
-	API       *persistence.Client
+	API       *api.Client
 	VoteQueue chan entities.Vote
 }
 
-func NewServer(api *persistence.Client, voteQueue chan entities.Vote) Server {
+func NewServer(api *api.Client, voteQueue chan entities.Vote) Server {
 	return Server{
 		API:       api,
 		VoteQueue: voteQueue,
@@ -50,7 +50,7 @@ type Client struct {
 	ID        string
 	Conn      *websocket.Conn
 	Pool      *Pool
-	API       *persistence.Client
+	API       *api.Client
 	VoteQueue chan entities.Vote
 }
 

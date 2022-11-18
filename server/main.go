@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"server/api"
 	"server/entities"
-	"server/persistence"
 	"server/websocketserver"
 	"strings"
 
@@ -26,7 +26,7 @@ func main() {
 
 	logger := log.New(os.Stdout, "server: ", log.LstdFlags)
 
-	persistenceClient, err := persistence.NewClient()
+	apiClient, err := api.NewClient()
 	if err != nil {
 		panic(err)
 	}
@@ -78,7 +78,7 @@ func main() {
 			Email:    emailPassword[0],
 			Password: emailPassword[1],
 		}
-		createdUser, err := persistenceClient.CreateUser(user)
+		createdUser, err := apiClient.CreateUser(user)
 		if err != nil {
 			if err.Error() == "ERROR: duplicate key value violates unique constraint \"users_email_key\" (SQLSTATE 23505)" { // hacky error handling
 				http.Error(w, http.StatusText(400), 400) // TODO: pass this to FE in interpretable way
@@ -118,7 +118,7 @@ func main() {
 		email := emailPassword[0]
 		password := emailPassword[1]
 
-		userUUID, err := persistenceClient.AuthorizeUser(email, password)
+		userUUID, err := apiClient.AuthorizeUser(email, password)
 		if err != nil {
 			if err.Error() == "unauthorized" {
 				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
@@ -137,7 +137,7 @@ func main() {
 	})
 
 	r.Get("/chat", func(w http.ResponseWriter, r *http.Request) {
-		messages, err := persistenceClient.GetMessages()
+		messages, err := apiClient.GetMessages()
 		logger.Println("err here?")
 		logger.Println(messages, err)
 		if err != nil {
@@ -161,7 +161,7 @@ func main() {
 			case vote := <-voteInMemoryQueue:
 				logger.Println("QUEUE PROCESSING VOTE", vote)
 				// TODO: process votes
-				x, e := persistenceClient.VoteOnMessage(vote)
+				x, e := apiClient.VoteOnMessage(vote)
 				logger.Println("QUEUE PROCESSING VOTE 2", x, e)
 				continue
 			}
@@ -171,7 +171,7 @@ func main() {
 	go func() {
 		logger.Println("Websocket Server running on port 4001")
 		// TODO: enqueue
-		wsServer := websocketserver.NewServer(persistenceClient, voteInMemoryQueue)
+		wsServer := websocketserver.NewServer(apiClient, voteInMemoryQueue)
 		wsServer.SetupRoutes("/chat")
 		http.ListenAndServe(":4001", nil)
 	}()
