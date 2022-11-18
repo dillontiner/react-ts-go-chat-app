@@ -4,9 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
-	"os"
 	"server/api"
 	"server/entities"
 	"strings"
@@ -27,8 +25,6 @@ func NewServer(api *api.Client) Server {
 }
 
 func (s *Server) ServeHTTP(port int) {
-	logger := log.New(os.Stdout, "HTTP Server: ", log.LstdFlags)
-
 	//
 	// HTTP Server and MiddleWare
 	//
@@ -132,8 +128,6 @@ func (s *Server) ServeHTTP(port int) {
 
 	r.Get("/chat", func(w http.ResponseWriter, r *http.Request) {
 		messages, err := s.API.GetMessages()
-		logger.Println("err here?")
-		logger.Println(messages, err)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
