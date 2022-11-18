@@ -173,7 +173,6 @@ func (c *Client) VoteOnMessage(vote entities.Vote) (*entities.Message, error) {
 		sql := fmt.Sprintf("UPDATE votes SET vote = %s WHERE message_uuid = '%s' AND voter_uuid = '%s'", trueFalseNull, vote.MessageUUID.String(), vote.VoterUUID.String())
 		update := c.db.Exec(sql)
 		if update.Error != nil {
-			fmt.Println("update")
 			return nil, update.Error
 		}
 	} else {
@@ -181,7 +180,6 @@ func (c *Client) VoteOnMessage(vote entities.Vote) (*entities.Message, error) {
 		vote.UUID = uuid.NewV4()
 		create := c.db.Create(vote)
 		if create.Error != nil {
-			fmt.Println("create")
 			return nil, create.Error
 		}
 	}
@@ -189,15 +187,12 @@ func (c *Client) VoteOnMessage(vote entities.Vote) (*entities.Message, error) {
 	messageRecord := entities.MessageRecord{}
 	result = c.db.Where("uuid = ?", vote.MessageUUID).First(&messageRecord)
 	if result.Error != nil {
-		fmt.Println(messageRecord.UUID)
-		fmt.Println("result1")
 		return nil, result.Error
 	}
 
 	votes := []entities.Vote{}
 	result = c.db.Where("message_uuid IN ? AND vote IS NOT NULL", []uuid.UUID{messageRecord.UUID}).Find(&votes)
 	if result.Error != nil {
-		fmt.Println("result2")
 		return nil, result.Error
 	}
 
