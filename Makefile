@@ -24,9 +24,6 @@ k8s-db-rebuild:
 k8s-db-run:
 	minikube service chat-app-db
 
-k8s-db-ssh:
-	kubectl exec --stdin --tty chat-app-db-58656c5f49-sv66d -- /bin/sh
-
 docker-server-build:
 	docker build -t chat-app-server ./server
 
@@ -35,7 +32,8 @@ docker-server-run:
 		-it \
 		--rm \
 		-v ${PWD}/server:/app \
-		-p 5000:5000 \
+		-p 4000:4000 \
+		-p 4001:4001 \
 		--network="host" \
 		chat-app-server
 
@@ -54,6 +52,3 @@ k8s-server-rebuild:
 
 k8s-server-run:
 	minikube service chat-app-server
-
-k8s-server-ssh:
-	kubectl exec --stdin --tty chat-app-server-7d5fb7888d-vcxtt -- /bin/sh
