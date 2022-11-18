@@ -21,12 +21,6 @@ const StyledApp = styled('div')({
   alignItems: 'center',
 })
 
-const TODO = () => {
-  return (
-    <div>TODO</div>
-  )
-}
-
 const App = () => {
   const [auth, setAuth] = useState("")
 

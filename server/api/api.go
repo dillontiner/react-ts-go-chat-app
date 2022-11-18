@@ -90,7 +90,7 @@ func (c *Client) GetMessages() (*[]entities.Message, error) {
 	fmt.Println("GETTING MESSAGES")
 	messageRecords := []entities.MessageRecord{}
 
-	// TODO: paginated loading when user scrolls
+	// TODO: pagination loading when user scrolls up
 	result := c.db.Order("sent_at desc").Limit(30).Find(&messageRecords) // latest 30 messages
 	if result.Error != nil {
 		return nil, result.Error

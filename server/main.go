@@ -47,7 +47,6 @@ func main() {
 	// Websocket Server
 	go func() {
 		logger.Println("Websocket Server running on port 4001")
-		// TODO: enqueue
 		wsServer := websocketserver.NewServer(apiClient, voteInMemoryQueue)
 		wsServer.SetupRoutes("/chat")
 		http.ListenAndServe(":4001", nil)

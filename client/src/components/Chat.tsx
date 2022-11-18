@@ -105,7 +105,6 @@ const DownVote = ({ votes, sendMessageVote }: VoteProps) => {
 }
 
 const MessageDisplay = ({ message, sendVote }: MessageProps) => {
-    // TODO: user upvoted or downvoted
     const sendMessageVote = (vote: boolean) => { sendVote(vote, message?.uuid || '') }
 
     return (
@@ -201,7 +200,6 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
     }
 
     useEffect(() => {
-        // TODO: query backend, redirect to login if failure
         if (ws != null) {
             ws.onmessage = function (evt: any) {
                 const wsBody = JSON.parse(evt.data)?.body || {} // TODO: error handling
@@ -224,7 +222,6 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
             method: "GET",
             url: "http://127.0.0.1:4000/chat",
         }).then(res => {
-            // TODO: update messages in history
             setChatHistory(res?.data?.messages || [])
         }).catch((error) => {
             // TODO: handle errors
@@ -318,19 +315,17 @@ const MessagePrompt = ({ ws }: MessagePromptProps) => {
     };
 
     if (ws == null) {
-        // TODO: loading
+        // TODO: loading page
         return (
-            <>TODO: loading</>
+            <>Loading...</>
         )
     }
 
     const handleSubmit = (event: any) => {
         event.preventDefault()
 
-        // TODO: fix dates getting truncated (missing times, wrong order)
         const now = new Date()
         if (ws != null) {
-            // TODO: handle writing on the backend
             const message: Message = {
                 senderUuid: authContext.auth,
                 body: messageBody,

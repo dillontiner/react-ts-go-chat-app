@@ -56,8 +56,6 @@ const Login = () => {
         password: '',
     })
 
-    // TODO: consider adding auth to cookies
-
     const handleInputChange = (e: any) => {
         const { id, value } = e.target;
         const newFormValues = {
@@ -70,7 +68,6 @@ const Login = () => {
         if (newFormValues.email !== '' && newFormValues.password !== '') {
             setDisabled(false)
         } else {
-            // TODO: handle delete case
             setDisabled(true)
         }
     };
@@ -79,7 +76,7 @@ const Login = () => {
         event.preventDefault();
 
         // assumes input validation from handleInputChange
-        const basicAuth = btoa(formValues.email + ":" + formValues.password) // TODO: hash password ?
+        const basicAuth = btoa(formValues.email + ":" + formValues.password)
 
         Axios({
             method: "GET",

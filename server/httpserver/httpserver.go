@@ -72,7 +72,7 @@ func (s *Server) ServeHTTP(port int) {
 		createdUser, err := s.API.CreateUser(user)
 		if err != nil {
 			if err.Error() == "ERROR: duplicate key value violates unique constraint \"users_email_key\" (SQLSTATE 23505)" { // hacky error handling
-				http.Error(w, http.StatusText(400), 400) // TODO: pass this to FE in interpretable way
+				http.Error(w, http.StatusText(400), 400)
 				return
 			}
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
