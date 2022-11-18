@@ -13,9 +13,8 @@ minikube start
 
 Next, build and start the db:
 ```
-make k8s-db-rebuild && make k8s-db-run
+eval $(minikube docker-env) && make k8s-db-rebuild && make k8s-db-run
 ```
-If things fail here, try running `eval $(minikube docker-env)` and running the commands from the make commands individually.
 
 Then
 - Copy the first url (with target port 5432)
@@ -25,13 +24,12 @@ Then
 
 Next, build and start the server:
 ```
-make k8s-server-rebuild && make k8s-server-run
+eval $(minikube docker-env) && make k8s-server-rebuild && make k8s-server-run
 ```
-If things fail here, try running `eval $(minikube docker-env)` and running the commands from the make commands individually.
 
 Then
-- Copy the first url (with http/4000 target port) and replace all usages of 127.0.0.1:4000
-- Copy the first url (with websocket/4001 target port) and replace the usage of 127.0.0.1:4001
+- Copy the port from the first 127.0.0.1 url and replace the port 4000 in all usages of 127.0.0.1:4000
+- Copy the port from the second 127.0.0.1 url and replace the port 4000 in all usages of 127.0.0.1:4001
 
 Next, build and run the client (locally, not minikube)
 ```
