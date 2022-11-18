@@ -97,7 +97,7 @@ func (c *Client) Read() {
 			log.Print("WEBSOCKET SERVER: ERROR: failed to unmarshal vote", err)
 		} else if vote.VoterUUID != uuid.Nil { // MVP for handling different objects
 			log.Print("WEBSOCKET SERVER: got vote", vote)
-			// TODO: update message
+			// enqueues message to be persisted
 			c.VoteQueue <- vote
 			responseBody = string(p)
 		}

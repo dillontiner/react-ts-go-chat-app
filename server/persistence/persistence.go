@@ -87,9 +87,6 @@ func (c *Client) AuthorizeUser(email string, password string) (*uuid.UUID, error
 	return &user.UUID, nil
 }
 
-type MessageVoteResult struct {
-}
-
 func (c *Client) GetMessages() (*[]entities.Message, error) {
 	fmt.Println("GETTING MESSAGES")
 	messageRecords := []entities.MessageRecord{}
@@ -176,6 +173,7 @@ func (c *Client) VoteOnMessage(vote entities.Vote) (*entities.Message, error) {
 		sql := fmt.Sprintf("UPDATE votes SET vote = %s WHERE message_uuid = '%s' AND voter_uuid = '%s'", trueFalseNull, vote.MessageUUID.String(), vote.VoterUUID.String())
 		update := c.db.Exec(sql)
 		if update.Error != nil {
+			fmt.Println("update")
 			return nil, update.Error
 		}
 	} else {
@@ -183,20 +181,31 @@ func (c *Client) VoteOnMessage(vote entities.Vote) (*entities.Message, error) {
 		vote.UUID = uuid.NewV4()
 		create := c.db.Create(vote)
 		if create.Error != nil {
+			fmt.Println("create")
 			return nil, create.Error
 		}
 	}
 
-	message := entities.Message{}
-	result = c.db.Where("uuid = ?", vote.MessageUUID).First(&message)
+	messageRecord := entities.MessageRecord{}
+	result = c.db.Where("uuid = ?", vote.MessageUUID).First(&messageRecord)
 	if result.Error != nil {
+		fmt.Println(messageRecord.UUID)
+		fmt.Println("result1")
 		return nil, result.Error
 	}
 
 	votes := []entities.Vote{}
-	result = c.db.Where("message_uuid IN ? AND vote IS NOT NULL", []uuid.UUID{message.UUID}).Find(&votes)
+	result = c.db.Where("message_uuid IN ? AND vote IS NOT NULL", []uuid.UUID{messageRecord.UUID}).Find(&votes)
 	if result.Error != nil {
+		fmt.Println("result2")
 		return nil, result.Error
+	}
+
+	message := entities.Message{
+		UUID:       messageRecord.UUID,
+		SentAt:     messageRecord.SentAt,
+		SenderUUID: messageRecord.SenderUUID,
+		Body:       messageRecord.Body,
 	}
 
 	for _, v := range votes {
