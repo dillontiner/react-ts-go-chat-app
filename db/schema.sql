@@ -7,15 +7,14 @@ CREATE TABLE users(
 CREATE TABLE messages(
 	uuid VARCHAR(36) PRIMARY KEY,
 	sent_at TIMESTAMP,
-	sender_uuid VARCHAR(36) REFERENCES users(uuid),
-	body text,
-	upvote_user_uuids VARCHAR(36)[],
-	downvote_user_uuids VARCHAR(36)[]
+	sender_uuid VARCHAR(36),
+	body text
 );
 
-CREATE TABLE sessions(
-	uuid VARCHAR(36) PRIMARY KEY, 
-	user_uuid VARCHAR(36) REFERENCES users(uuid), 
-	created_at TIMESTAMP, 
-	ends_at TIMESTAMP
+CREATE TABLE votes(
+	uuid VARCHAR(36) PRIMARY KEY,
+	updated_at TIMESTAMP,
+	message_uuid VARCHAR(36),
+	voter_uuid VARCHAR(36),
+	vote BOOLEAN
 );

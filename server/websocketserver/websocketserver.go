@@ -9,16 +9,19 @@ import (
 	"server/persistence"
 
 	"github.com/gorilla/websocket"
+	uuid "github.com/satori/go.uuid"
 )
 
 // var addr = flag.String("addr", "localhost:8080", "http service address")
 type Server struct {
-	API *persistence.Client
+	API       *persistence.Client
+	VoteQueue chan entities.Vote
 }
 
-func NewServer(api *persistence.Client) Server {
+func NewServer(api *persistence.Client, voteQueue chan entities.Vote) Server {
 	return Server{
-		API: api,
+		API:       api,
+		VoteQueue: voteQueue,
 	}
 }
 
@@ -44,10 +47,11 @@ type Message struct {
 }
 
 type Client struct {
-	ID   string
-	Conn *websocket.Conn
-	Pool *Pool
-	API  *persistence.Client
+	ID        string
+	Conn      *websocket.Conn
+	Pool      *Pool
+	API       *persistence.Client
+	VoteQueue chan entities.Vote
 }
 
 func (c *Client) Read() {
@@ -63,26 +67,47 @@ func (c *Client) Read() {
 			return
 		}
 
-		fmt.Println("Persisting chat message")
+		responseBody := ""
+
 		chatMessage := entities.Message{}
 		err = json.Unmarshal(p, &chatMessage)
 		if err != nil {
-			log.Print("WEBSOCKET SERVER: ERROR: failed to unmarshal message", err)
+			log.Print("WEBSOCKET SERVER: ERROR: failed to unmarshal chat message", err)
+		} else if chatMessage.Body != "" { // MVP for handling different objects
+			fmt.Println("Persisting chat message")
+
+			createdMessage, err := c.API.CreateMessage(chatMessage)
+			if err != nil {
+				log.Print("WEBSOCKET SERVER: ERROR: failed to persist message", err)
+				break
+			}
+
+			createdMessageBytes, err := json.Marshal(createdMessage)
+			if err != nil {
+				log.Print("WEBSOCKET SERVER: ERROR: failed to persist message", err)
+				break
+			}
+
+			responseBody = string(createdMessageBytes)
 		}
 
-		createdMessage, err := c.API.CreateMessage(chatMessage)
+		vote := entities.Vote{}
+		err = json.Unmarshal(p, &vote)
 		if err != nil {
-			log.Print("WEBSOCKET SERVER: ERROR: failed to persist message", err)
-			break
+			log.Print("WEBSOCKET SERVER: ERROR: failed to unmarshal vote", err)
+		} else if vote.VoterUUID != uuid.Nil { // MVP for handling different objects
+			log.Print("WEBSOCKET SERVER: got vote", vote)
+			// TODO: update message
+			c.VoteQueue <- vote
+			responseBody = string(p)
 		}
 
-		createdMessageBytes, err := json.Marshal(createdMessage)
-		if err != nil {
-			log.Print("WEBSOCKET SERVER: ERROR: failed to persist message", err)
-			break
+		if responseBody == "" {
+			// failed to parse objects
+			log.Print("WEBSOCKET SERVER: ERROR: failed to unmarshal object", err)
 		}
 
-		message := Message{Type: messageType, Body: string(createdMessageBytes)}
+		message := Message{Type: messageType, Body: responseBody}
 		c.Pool.Broadcast <- message
 		log.Printf("Message Received: %+v\n", message)
 	}
@@ -135,9 +160,10 @@ func (s *Server) ServeWs(pool *Pool, w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := &Client{
-		Conn: conn,
-		Pool: pool,
-		API:  s.API,
+		Conn:      conn,
+		Pool:      pool,
+		API:       s.API,
+		VoteQueue: s.VoteQueue,
 	}
 
 	pool.Register <- client

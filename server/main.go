@@ -138,6 +138,8 @@ func main() {
 
 	r.Get("/chat", func(w http.ResponseWriter, r *http.Request) {
 		messages, err := persistenceClient.GetMessages()
+		logger.Println("err here?")
+		logger.Println(messages, err)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
@@ -150,9 +152,26 @@ func main() {
 		json.NewEncoder(w).Encode(response)
 	})
 
+	voteInMemoryQueue := make(chan entities.Vote)
+	go func() {
+		logger.Println("Running in memory queue")
+
+		for {
+			select {
+			case vote := <-voteInMemoryQueue:
+				logger.Println("QUEUE PROCESSING VOTE", vote)
+				// TODO: process votes
+				x, e := persistenceClient.VoteOnMessage(vote)
+				logger.Println("QUEUE PROCESSING VOTE 2", x, e)
+				continue
+			}
+		}
+	}()
+
 	go func() {
 		logger.Println("Websocket Server running on port 4001")
-		wsServer := websocketserver.NewServer(persistenceClient)
+		// TODO: enqueue
+		wsServer := websocketserver.NewServer(persistenceClient, voteInMemoryQueue)
 		wsServer.SetupRoutes("/chat")
 		http.ListenAndServe(":4001", nil)
 	}()

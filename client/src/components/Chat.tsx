@@ -73,13 +73,19 @@ const NameVoteContainer = styled('div')({
 })
 
 type MessageProps = {
-    body: string
-    user: string
-    sentAt: string
+    message: Message
+    sendVote: (vote: boolean, messageUuid: string) => void
 }
 
 type VoteProps = {
     votes: string[]
+    sendMessageVote: (vote: boolean) => void
+}
+
+type Vote = {
+    messageUuid: string
+    upvoteUserUuids: string[]
+    downvoteUserUuids: string[]
 }
 
 const VoteArrowContainer = styled('div')({
@@ -89,52 +95,52 @@ const VoteArrowContainer = styled('div')({
     justifyContent: 'center',
 })
 
-
-const UpVote = ({ votes }: VoteProps) => {
+const UpVote = ({ votes, sendMessageVote }: VoteProps) => {
     const n = votes.length
     const authContext = useContext(AuthContext)
     const userVoted = votes.includes(authContext.auth)
     return (
         <VoteArrowContainer>
             {userVoted ? (
-                <UpVoted onClick={() => { console.log('TODO') }} />
+                <UpVoted onClick={() => { sendMessageVote(true) }} />
             ) : (
-                <UpVoteEmpty onClick={() => { console.log('TODO') }} />
+                <UpVoteEmpty onClick={() => { sendMessageVote(true) }} />
             )}
             <>{n}</>
         </VoteArrowContainer>
     )
 }
 
-const DownVote = ({ votes }: VoteProps) => {
+const DownVote = ({ votes, sendMessageVote }: VoteProps) => {
     const n = votes.length
     const authContext = useContext(AuthContext)
     const userVoted = votes.includes(authContext.auth)
     return (
         <VoteArrowContainer>
             {userVoted ? (
-                <DownVoted onClick={() => { console.log('TODO') }} />
+                <DownVoted onClick={() => { sendMessageVote(false) }} />
             ) : (
-                <DownVoteEmpty onClick={() => { console.log('TODO') }} />
+                <DownVoteEmpty onClick={() => { sendMessageVote(false) }} />
             )}
             <>{n}</>
         </VoteArrowContainer>
     )
 }
 
-const Message = ({ body, user, sentAt }: MessageProps) => {
+const MessageDisplay = ({ message, sendVote }: MessageProps) => {
     // TODO: user upvoted or downvoted
+    const sendMessageVote = (vote: boolean) => { sendVote(vote, message?.uuid || '') }
     return (
         <MessageContainer>
             <NameVoteContainer>
-                {user}
+                {message.senderUuid}
                 <NameVoteContainer>
-                    <UpVote votes={["a", user]} />
-                    <DownVote votes={["a", "b"]} />
+                    <UpVote votes={["a", "b"]} sendMessageVote={sendMessageVote} />
+                    <DownVote votes={["a", "b"]} sendMessageVote={sendMessageVote} />
                 </NameVoteContainer>
             </NameVoteContainer>
-            {body}
-            <StyledTimestamp>{sentAt}</StyledTimestamp>
+            {message.body}
+            <StyledTimestamp>{message.sentAt}</StyledTimestamp>
         </MessageContainer>
     )
 }
@@ -157,14 +163,32 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
     const [lastMessageSentAt, setLastMessageSentAt] = useState(new Date())
     const [chatHistory, setChatHistory] = useState<Message[]>([])
     const [liveMessages, setLiveMessages] = useState<Message[]>([])
+    const authContext = useContext(AuthContext)
+
+    const sendVote = (vote: boolean, messageUuid: string) => {
+        ws?.send(JSON.stringify({
+            messageUuid: messageUuid,
+            voterUuid: authContext.auth,
+            vote: vote,
+        }))
+    }
 
     useEffect(() => {
         // TODO: query backend, redirect to login if failure
         if (ws != null) {
             ws.onmessage = function (evt: any) {
-                const wsMessageBody = JSON.parse(evt.data)?.body || {} // TODO: error handling
-                setLastMessage(JSON.parse(wsMessageBody) as Message)
-                setLastMessageSentAt(new Date())
+                const wsBody = JSON.parse(evt.data)?.body || {} // TODO: error handling
+                const wsBodyJson = JSON.parse(wsBody)
+
+                // MVP handling different types over one ws connection
+                if (wsBodyJson["senderUuid"] !== undefined) {
+                    setLastMessage(wsBodyJson as Message)
+                    setLastMessageSentAt(new Date())
+                } else if (wsBodyJson["voterUuid"] !== undefined) {
+                    console.log(wsBodyJson)
+                }
+
+
             }
         }
     }, [ws])
@@ -183,7 +207,6 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
     }, [])
 
     useEffect(() => {
-        console.log(lastMessage)
         if (lastMessage !== null) {
             setLiveMessages([lastMessage, ...liveMessages])
         }
@@ -191,8 +214,8 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
 
     return (
         <>
-            {liveMessages.map((message) => (<Message body={message.body} user={message.senderUuid} sentAt={message.sentAt} />))}
-            {chatHistory.map((message) => (<Message body={message.body} user={message.senderUuid} sentAt={message.sentAt} />))}
+            {liveMessages.map((message) => (<MessageDisplay message={message} sendVote={sendVote} />))}
+            {chatHistory.map((message) => (<MessageDisplay message={message} sendVote={sendVote} />))}
         </>
     )
 }
