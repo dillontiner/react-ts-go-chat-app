@@ -74,15 +74,12 @@ const SignUp = () => {
     const handleSubmit = (event: any) => {
         event.preventDefault();
 
-        // TODO: input validation
-
         // assumes input validation from handleInputChange
         const basicAuth = btoa(formValues.email + ":" + formValues.password) // TODO: hash password ?
 
-        // TODO: hash passwords bcryptjs
         Axios({
             method: "POST",
-            url: "http://localhost:4000/login",
+            url: "http://127.0.0.1:4000/login",
             headers: {
                 "Authorization": "Basic " + basicAuth
             }

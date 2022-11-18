@@ -11,5 +11,6 @@ RUN go mod tidy
 RUN go build -o /chat-app-server
 
 EXPOSE 4000
+EXPOSE 4001
 
 CMD ["/chat-app-server"]

@@ -12,7 +12,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-// var addr = flag.String("addr", "localhost:8080", "http service address")
 type Server struct {
 	API       *api.Client
 	VoteQueue chan entities.Vote

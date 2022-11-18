@@ -36,7 +36,7 @@ func (s *Server) ServeHTTP(port int) {
 	r.Use(middleware.Logger)
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"}, // TODO: env var for this
+		AllowedOrigins:   []string{"*"}, // improvement: env var client url
 		AllowedMethods:   []string{"GET", "POST"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		AllowCredentials: false,
@@ -46,6 +46,10 @@ func (s *Server) ServeHTTP(port int) {
 	//
 	// HTTP Routes
 	//
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("hello"))
+	})
+
 	r.Post("/login", func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		splitAuthHeader := strings.Split(authHeader, "Basic ")

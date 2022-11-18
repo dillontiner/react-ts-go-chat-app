@@ -7,9 +7,14 @@ metadata:
   name: chat-app-server
 spec:
   ports:
-  - port: 4000
+  - name: http
+    port: 4000
     protocol: TCP
     targetPort: 4000
+  - name: websocket
+    port: 4001
+    protocol: TCP
+    targetPort: 4001
   selector:
     app: chat-app-server
   type: NodePort

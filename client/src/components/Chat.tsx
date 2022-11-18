@@ -154,7 +154,7 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
     }
 
     const applyVote = (message: Message, vote: Vote): [boolean, Message] => {
-        if (message.uuid && message.uuid == vote.messageUuid) {
+        if (message.uuid && message.uuid === vote.messageUuid) {
             // apply the vote
             if (vote.vote) {
                 if (message.upvoteUserUuids === undefined) {
@@ -212,7 +212,6 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
                     setLastMessage(wsBodyJson as Message)
                     setLastMessageSentAt(new Date())
                 } else if (wsBodyJson["voterUuid"] !== undefined) {
-                    const vote = wsBodyJson as Vote
                     setLastVote(wsBodyJson as Vote)
                     setLastVoteReceivedAt(new Date())
                 }
@@ -223,7 +222,7 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
     useEffect(() => {
         Axios({
             method: "GET",
-            url: "http://localhost:4000/chat",
+            url: "http://127.0.0.1:4000/chat",
         }).then(res => {
             // TODO: update messages in history
             setChatHistory(res?.data?.messages || [])
