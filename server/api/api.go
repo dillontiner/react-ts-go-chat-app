@@ -44,12 +44,11 @@ func NewClient() (*Client, error) {
 }
 
 func (c *Client) CreateUser(user entities.User) (*entities.User, error) {
-
 	user.UUID = uuid.NewV4()
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	user.Password = string(hashedPassword)
