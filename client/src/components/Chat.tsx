@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useContext } from 'react'
 import { Paper, TextField, Button, Typography } from '@mui/material'
-import ForwardIcon from '@mui/icons-material/Forward'
 import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined'
 import { styled } from '@mui/system'
 import { useNavigate } from 'react-router'
@@ -45,16 +44,6 @@ const StyledTimestamp = styled('div')({
     marginTop: '0.5rem',
 })
 
-const DownVoted = styled(ForwardIcon)({
-    transform: 'rotate(90deg)',
-    color: 'red',
-})
-
-const UpVoted = styled(ForwardIcon)({
-    transform: 'rotate(-90deg)',
-    color: 'green',
-})
-
 const DownVoteEmpty = styled(ForwardOutlinedIcon)({
     transform: 'rotate(90deg)',
     color: 'blue',
@@ -84,8 +73,8 @@ type VoteProps = {
 
 type Vote = {
     messageUuid: string
-    upvoteUserUuids: string[]
-    downvoteUserUuids: string[]
+    vote: boolean
+    voterUUID: string
 }
 
 const VoteArrowContainer = styled('div')({
@@ -97,15 +86,9 @@ const VoteArrowContainer = styled('div')({
 
 const UpVote = ({ votes, sendMessageVote }: VoteProps) => {
     const n = votes.length
-    const authContext = useContext(AuthContext)
-    const userVoted = votes.includes(authContext.auth)
     return (
         <VoteArrowContainer>
-            {userVoted ? (
-                <UpVoted onClick={() => { sendMessageVote(true) }} />
-            ) : (
-                <UpVoteEmpty onClick={() => { sendMessageVote(true) }} />
-            )}
+            <UpVoteEmpty onClick={() => { sendMessageVote(true) }} />
             <>{n}</>
         </VoteArrowContainer>
     )
@@ -113,15 +96,9 @@ const UpVote = ({ votes, sendMessageVote }: VoteProps) => {
 
 const DownVote = ({ votes, sendMessageVote }: VoteProps) => {
     const n = votes.length
-    const authContext = useContext(AuthContext)
-    const userVoted = votes.includes(authContext.auth)
     return (
         <VoteArrowContainer>
-            {userVoted ? (
-                <DownVoted onClick={() => { sendMessageVote(false) }} />
-            ) : (
-                <DownVoteEmpty onClick={() => { sendMessageVote(false) }} />
-            )}
+            <DownVoteEmpty onClick={() => { sendMessageVote(false) }} />
             <>{n}</>
         </VoteArrowContainer>
     )
@@ -130,13 +107,14 @@ const DownVote = ({ votes, sendMessageVote }: VoteProps) => {
 const MessageDisplay = ({ message, sendVote }: MessageProps) => {
     // TODO: user upvoted or downvoted
     const sendMessageVote = (vote: boolean) => { sendVote(vote, message?.uuid || '') }
+
     return (
         <MessageContainer>
             <NameVoteContainer>
                 {message.senderUuid}
                 <NameVoteContainer>
-                    <UpVote votes={message.upvoteUserUuids || []} sendMessageVote={sendMessageVote} />
-                    <DownVote votes={message.downvoteUserUuids || []} sendMessageVote={sendMessageVote} />
+                    <UpVote votes={message?.upvoteUserUuids || []} sendMessageVote={sendMessageVote} />
+                    <DownVote votes={message?.downvoteUserUuids || []} sendMessageVote={sendMessageVote} />
                 </NameVoteContainer>
             </NameVoteContainer>
             {message.body}
@@ -161,6 +139,8 @@ type Message = {
 const ChatHistory = ({ ws }: ChatHistoryProps) => {
     const [lastMessage, setLastMessage] = useState<Message | null>(null)
     const [lastMessageSentAt, setLastMessageSentAt] = useState(new Date())
+    const [lastVote, setLastVote] = useState<Vote | null>(null)
+    const [lastVoteReceivedAt, setLastVoteReceivedAt] = useState(new Date())
     const [chatHistory, setChatHistory] = useState<Message[]>([])
     const [liveMessages, setLiveMessages] = useState<Message[]>([])
     const authContext = useContext(AuthContext)
@@ -173,7 +153,52 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
         }))
     }
 
-    console.log(chatHistory)
+    const applyVote = (message: Message, vote: Vote): [boolean, Message] => {
+        if (message.uuid && message.uuid == vote.messageUuid) {
+            // apply the vote
+            if (vote.vote) {
+                if (message.upvoteUserUuids === undefined) {
+                    message.upvoteUserUuids = [vote.voterUUID]
+                    return [true, message]
+                }
+
+                const upvotes = new Set(message.upvoteUserUuids || [])
+
+                if (upvotes.has(vote.voterUUID)) {
+                    // toggle off upvote
+                    upvotes.delete(vote.voterUUID)
+                } else (
+                    // toggle on upvote
+                    upvotes.add(vote.voterUUID)
+                )
+
+                message.upvoteUserUuids = Array.from(upvotes)
+
+                return [true, message]
+            } else {
+                if (message.downvoteUserUuids === undefined) {
+                    message.downvoteUserUuids = [vote.voterUUID]
+                    return [true, message]
+                }
+
+                const downvotes = new Set(message.downvoteUserUuids || [])
+
+                if (downvotes.has(vote.voterUUID)) {
+                    // toggle off downvote
+                    downvotes.delete(vote.voterUUID)
+                } else (
+                    // toggle on downvote
+                    downvotes.add(vote.voterUUID)
+                )
+
+                message.downvoteUserUuids = Array.from(downvotes)
+
+                return [true, message]
+            }
+        }
+
+        return [false, message]
+    }
 
     useEffect(() => {
         // TODO: query backend, redirect to login if failure
@@ -187,10 +212,10 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
                     setLastMessage(wsBodyJson as Message)
                     setLastMessageSentAt(new Date())
                 } else if (wsBodyJson["voterUuid"] !== undefined) {
-                    console.log(wsBodyJson)
+                    const vote = wsBodyJson as Vote
+                    setLastVote(wsBodyJson as Vote)
+                    setLastVoteReceivedAt(new Date())
                 }
-
-
             }
         }
     }, [ws])
@@ -213,6 +238,33 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
             setLiveMessages([lastMessage, ...liveMessages])
         }
     }, [lastMessageSentAt])
+
+    useEffect(() => {
+        if (lastVote !== null) {
+            var liveMessagesUpdated = false
+            const updatedLiveMessages = liveMessages.map((message) => {
+                const [applied, newMessage] = applyVote(message, lastVote)
+                liveMessagesUpdated = applied || liveMessagesUpdated
+                return newMessage
+            })
+
+            if (liveMessagesUpdated) {
+                setLiveMessages(updatedLiveMessages)
+                return
+            }
+
+            var chatHistoryUpdated = false
+            const updatedChatHistory = chatHistory.map((message) => {
+                const [applied, newMessage] = applyVote(message, lastVote)
+                chatHistoryUpdated = applied || chatHistoryUpdated
+                return newMessage
+            })
+
+            if (chatHistoryUpdated) {
+                setChatHistory(updatedChatHistory)
+            }
+        }
+    }, [lastVoteReceivedAt])
 
     return (
         <>
@@ -294,22 +346,6 @@ const MessagePrompt = ({ ws }: MessagePromptProps) => {
                 setDisabled(true)
             }
         }
-        // Axios({
-        //     method: "POST",
-        //     url: "http://localhost:4000/message",
-        //     headers: {},
-        //     data: {
-        //         senderUuid: authContext.auth, // UUID to parametrize request
-        //         body: message,
-        //         sentAt: now.toISOString()
-        //     }
-        // }).then(res => {
-        //     // TODO: update messages in app
-        //     console.log(res)
-        // }).catch((error) => {
-        //     // TODO: handle errors
-        //     console.log(error)
-        // })
     };
 
     return (
