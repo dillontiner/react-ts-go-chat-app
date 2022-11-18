@@ -95,15 +95,13 @@ func (c *Client) GetMessages() (*[]entities.Message, error) {
 	messageRecords := []entities.MessageRecord{}
 
 	// TODO: paginated loading when user scrolls
-	// latest N messages
-	result := c.db.Order("sent_at desc").Limit(30).Find(&messageRecords)
+	result := c.db.Order("sent_at desc").Limit(30).Find(&messageRecords) // latest 30 messages
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
 	// original plan to use array of strings caused issues with gorm library, hacking the association for MVP
-	messages := []entities.Message{}
-	messageByUUID := map[uuid.UUID]*entities.Message{}
+	messageByUUID := map[uuid.UUID]entities.Message{}
 	messageUUIDs := []uuid.UUID{}
 	for _, m := range messageRecords {
 		messageUUIDs = append(messageUUIDs, m.UUID)
@@ -113,30 +111,32 @@ func (c *Client) GetMessages() (*[]entities.Message, error) {
 			SenderUUID: m.SenderUUID,
 			Body:       m.Body,
 		}
-		messageByUUID[m.UUID] = &message
-		messages = append(messages, message)
+		messageByUUID[m.UUID] = message
 	}
 
 	votes := []entities.Vote{}
-	result = c.db.Where("message_uuid IN ?", messageUUIDs).Find(&votes)
+	result = c.db.Where("message_uuid IN ? AND vote IS NOT NULL", messageUUIDs).Find(&votes)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
 	for _, v := range votes {
-		if messageByUUID[v.MessageUUID] == nil {
-			continue
-		}
-
 		// add the voter
 		if v.Vote {
-			upvotes := messageByUUID[v.MessageUUID].UpvoteUserUUIDS
-			messageByUUID[v.MessageUUID].UpvoteUserUUIDS = append(upvotes, v.VoterUUID)
+			message := messageByUUID[v.MessageUUID]
+			message.UpvoteUserUUIDS = append(message.UpvoteUserUUIDS, v.VoterUUID)
+			messageByUUID[v.MessageUUID] = message
 		} else {
-			downvotes := messageByUUID[v.MessageUUID].DownvoteUserUUIDS
-			messageByUUID[v.MessageUUID].DownvoteUserUUIDS = append(downvotes, v.VoterUUID)
+			message := messageByUUID[v.MessageUUID]
+			message.DownvoteUserUUIDS = append(message.DownvoteUserUUIDS, v.VoterUUID)
+			messageByUUID[v.MessageUUID] = message
 		}
 
+	}
+
+	messages := []entities.Message{}
+	for _, u := range messageUUIDs {
+		messages = append(messages, messageByUUID[u])
 	}
 
 	return &messages, nil
@@ -187,18 +187,27 @@ func (c *Client) VoteOnMessage(vote entities.Vote) (*entities.Message, error) {
 		}
 	}
 
-	// SELECT
-	// MIN(m.uuid) uuid,
-	// MIN(m.body) body,
-	// MIN(m.sent_at) sent_at,
-	// MIN(m.sender_uuid) sender_uuid,
-	// STRING_AGG(v.voter_uuid, ',') voter_uuids,
-	// v.vote
-	// from messages m
-	// join votes v
-	// on m.uuid = v.message_uuid
-	// WHERE v.vote IS NOT NULL
-	// GROUP BY message_UUID, v.vote
+	message := entities.Message{}
+	result = c.db.Where("uuid = ?", vote.MessageUUID).First(&message)
+	if result.Error != nil {
+		return nil, result.Error
+	}
 
-	return nil, nil
+	votes := []entities.Vote{}
+	result = c.db.Where("message_uuid IN ? AND vote IS NOT NULL", []uuid.UUID{message.UUID}).Find(&votes)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	for _, v := range votes {
+		// add the voter
+		if v.Vote {
+			message.UpvoteUserUUIDS = append(message.UpvoteUserUUIDS, v.VoterUUID)
+		} else {
+			message.DownvoteUserUUIDS = append(message.DownvoteUserUUIDS, v.VoterUUID)
+		}
+
+	}
+
+	return &message, nil
 }

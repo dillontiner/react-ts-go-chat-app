@@ -135,8 +135,8 @@ const MessageDisplay = ({ message, sendVote }: MessageProps) => {
             <NameVoteContainer>
                 {message.senderUuid}
                 <NameVoteContainer>
-                    <UpVote votes={["a", "b"]} sendMessageVote={sendMessageVote} />
-                    <DownVote votes={["a", "b"]} sendMessageVote={sendMessageVote} />
+                    <UpVote votes={message.upvoteUserUuids || []} sendMessageVote={sendMessageVote} />
+                    <DownVote votes={message.downvoteUserUuids || []} sendMessageVote={sendMessageVote} />
                 </NameVoteContainer>
             </NameVoteContainer>
             {message.body}
@@ -172,6 +172,8 @@ const ChatHistory = ({ ws }: ChatHistoryProps) => {
             vote: vote,
         }))
     }
+
+    console.log(chatHistory)
 
     useEffect(() => {
         // TODO: query backend, redirect to login if failure
